@@ -390,14 +390,7 @@ export default function Repositories() {
       )}
 
       {sorted.length > 0 && (
-        <div className="repo-pagination d-flex align-items-center flex-wrap gap-2 mt-3 rounded">
-          <div className="d-flex align-items-center gap-2">
-            <span className="text-muted-rs small">
-              {sorted.length === 0
-                ? '0 repositories'
-                : `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, sorted.length)} of ${sorted.length}`}
-            </span>
-          </div>
+        <div className="repo-pagination d-flex align-items-center justify-content-center flex-wrap gap-2 mt-3 rounded">
           {totalPages > 1 && (
             <nav aria-label="Repository pages" className="d-flex align-items-center justify-content-center gap-1 flex-grow-1">
               <button
