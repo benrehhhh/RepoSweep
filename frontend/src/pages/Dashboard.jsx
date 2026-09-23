@@ -1,11 +1,15 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { useAuth } from '../hooks/useAuth.jsx';
 import { useRepositories } from '../hooks/useRepositories.js';
 import { classifyRepo, STATUS } from '../lib/classify.js';
 import { greeting, timeAgo } from '../lib/format.js';
+import { listProtected, addProtected, removeProtected } from '../services/protected.js';
 import LoadingState from '../components/common/LoadingState.jsx';
 import ErrorState from '../components/common/ErrorState.jsx';
+import RepositoryDetailsPanel from '../components/repositories/RepositoryDetailsPanel.jsx';
 
 function StatCard({ icon, label, value, note, tone = '', to }) {
   return (
@@ -25,6 +29,11 @@ function StatCard({ icon, label, value, note, tone = '', to }) {
 export default function Dashboard() {
   const { user, demoMode } = useAuth();
   const { data, isLoading, isError, error, refetch } = useRepositories();
+  const queryClient = useQueryClient();
+  const protectedQuery = useQuery({ queryKey: ['protected'], queryFn: listProtected });
+  const [details, setDetails] = useState(null);
+  const [protecting, setProtecting] = useState(false);
+  const [notice, setNotice] = useState(null);
 
   if (isLoading) {
     return <LoadingState label="Loading your repositories…" rows={5} />;
@@ -61,8 +70,38 @@ export default function Dashboard() {
 
   const name = user?.display_name || user?.username || 'there';
 
+  async function handleToggleProtect(repo) {
+    const fullName = repo.full_name || `${repo.owner?.login}/${repo.name}`;
+    setProtecting(true);
+    setNotice(null);
+    try {
+      if (repo.protected) {
+        const rows = protectedQuery.data?.items || [];
+        const row = rows.find((r) => r.full_name.toLowerCase() === fullName.toLowerCase());
+        if (row) await removeProtected(row.id);
+        setNotice(`${repo.name} is no longer protected.`);
+      } else {
+        await addProtected(repo.owner?.login || 'demo-user', repo.name);
+        setNotice(`${repo.name} is now protected from bulk destructive actions.`);
+      }
+      setDetails((prev) => (prev ? { ...prev, protected: !prev.protected } : prev));
+      await queryClient.invalidateQueries({ queryKey: ['protected'] });
+      setTimeout(() => setNotice(null), 4000);
+    } catch (err) {
+      setNotice(err.message);
+    } finally {
+      setProtecting(false);
+    }
+  }
+
   return (
     <>
+      {notice && (
+        <div className="alert alert-success d-flex align-items-center gap-2 py-2 mb-3">
+          <i className="bi bi-check-circle" aria-hidden="true" />
+          {notice}
+        </div>
+      )}
       <div className="page-head d-flex flex-wrap align-items-end justify-content-between gap-2">
         <div>
           <h1>
@@ -122,14 +161,18 @@ export default function Dashboard() {
                 <ul className="list-group list-group-flush">
                   {needsReview.slice(0, 6).map(({ repo, status }) => (
                     <li key={repo.id} className="list-group-item d-flex align-items-center justify-content-between gap-3">
-                      <Link
-                        to="/app/repositories?status=potentially-inactive"
-                        className="text-decoration-none fw-semibold text-truncate"
-                        style={{ color: 'var(--rs-text)' }}
+                      <button
+                        type="button"
+                        className="dashboard-repo-link"
+                        onClick={() => setDetails(repo)}
                       >
-                        <i className={`bi ${status.icon} me-2`} style={{ color: status.key === STATUS.STALE ? 'var(--rs-warning)' : 'var(--rs-warning)' }} aria-hidden="true" />
-                        {repo.name}
-                      </Link>
+                        <i
+                          className={`bi ${status.icon}`}
+                          style={{ color: 'var(--rs-warning)' }}
+                          aria-hidden="true"
+                        />
+                        <span className="dash-repo-name">{repo.name}</span>
+                      </button>
                       <span className="text-muted-rs small text-nowrap">
                         {timeAgo(repo.pushed_at || repo.updated_at)}
                       </span>
@@ -203,6 +246,14 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      <RepositoryDetailsPanel
+        repo={details}
+        open={Boolean(details)}
+        onClose={() => setDetails(null)}
+        onToggleProtect={handleToggleProtect}
+        protecting={protecting}
+      />
     </>
   );
 }
