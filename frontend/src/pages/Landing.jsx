@@ -76,9 +76,9 @@ export default function LandingPage() {
           <Link to="/" className="navbar-brand d-flex align-items-center gap-2">
             <span
               className="d-grid place-items-center rounded"
-              style={{ width: 28, height: 28, background: 'var(--rs-accent)', color: '#fff' }}
+              style={{ width: 30, height: 30, background: 'var(--rs-accent)', color: '#fff' }}
             >
-              <SweepMark size={22} />
+              <SweepMark size={20} />
             </span>
             <span className="fw-bold">RepoSweep</span>
           </Link>
