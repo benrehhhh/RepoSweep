@@ -25,6 +25,21 @@ import EmptyState from '../components/common/EmptyState.jsx';
 
 const PAGE_SIZES = [20, 50, 100];
 
+function pageNumbers(current, total) {
+  const pages = new Set([1, total, current - 1, current, current + 1]);
+  const sorted = [...pages]
+    .filter((p) => p >= 1 && p <= total)
+    .sort((a, b) => a - b);
+  const out = [];
+  let prev = 0;
+  for (const p of sorted) {
+    if (p - prev > 1) out.push('…');
+    out.push(p);
+    prev = p;
+  }
+  return out;
+}
+
 function matchesUpdated(repo, range) {
   const days = daysBetween(repo.pushed_at || repo.updated_at);
   if (days === null) return false;
@@ -384,7 +399,59 @@ export default function Repositories() {
       )}
 
       {sorted.length > 0 && (
-        <div className="repo-pagination d-flex justify-content-between flex-wrap gap-2 mt-3 rounded">
+        <div className="repo-pagination d-flex align-items-center flex-wrap gap-2 mt-3 rounded">
+          <div className="d-flex align-items-center gap-2">
+            <span className="text-muted-rs small">
+              {sorted.length === 0
+                ? '0 repositories'
+                : `${(safePage - 1) * pageSize + 1}–${Math.min(safePage * pageSize, sorted.length)} of ${sorted.length}`}
+            </span>
+            {selection.size < sorted.length && sorted.length > pageSize && (
+              <button type="button" className="btn btn-ghost btn-sm" onClick={selectAllFiltered}>
+                Select all {sorted.length} filtered
+              </button>
+            )}
+          </div>
+          {totalPages > 1 && (
+            <nav aria-label="Repository pages" className="d-flex align-items-center justify-content-center gap-1 flex-grow-1">
+              <button
+                type="button"
+                className="btn btn-outline-secondary btn-sm"
+                aria-label="Previous page"
+                disabled={safePage <= 1}
+                onClick={() => setPage(safePage - 1)}
+              >
+                <i className="bi bi-chevron-left" aria-hidden="true" />
+              </button>
+              {pageNumbers(safePage, totalPages).map((p, i) =>
+                p === '…' ? (
+                  <span key={`ellipsis-${i}`} className="small text-muted-rs px-1">
+                    …
+                  </span>
+                ) : (
+                  <button
+                    key={p}
+                    type="button"
+                    aria-label={`Page ${p}`}
+                    aria-current={p === safePage ? 'page' : undefined}
+                    className={`btn btn-sm page-btn ${p === safePage ? 'btn-primary' : 'btn-outline-secondary'}`}
+                    onClick={() => setPage(p)}
+                  >
+                    {p}
+                  </button>
+                ),
+              )}
+              <button
+                type="button"
+                className="btn btn-outline-secondary btn-sm"
+                aria-label="Next page"
+                disabled={safePage >= totalPages}
+                onClick={() => setPage(safePage + 1)}
+              >
+                <i className="bi bi-chevron-right" aria-hidden="true" />
+              </button>
+            </nav>
+          )}
           <div className="d-flex align-items-center gap-2">
             <select
               className="form-select form-select-sm page-size-control"
@@ -398,40 +465,7 @@ export default function Repositories() {
                 </option>
               ))}
             </select>
-            <span className="text-muted-rs small">
-              {sorted.length === 0
-                ? '0 repositories'
-                : `${(safePage - 1) * pageSize + 1}–${Math.min(safePage * pageSize, sorted.length)} of ${sorted.length}`}
-            </span>
-            {selection.size < sorted.length && sorted.length > pageSize && (
-              <button type="button" className="btn btn-ghost btn-sm" onClick={selectAllFiltered}>
-                Select all {sorted.length} filtered
-              </button>
-            )}
           </div>
-          {totalPages > 1 && (
-            <div className="d-flex align-items-center gap-2">
-              <button
-                type="button"
-                className="btn btn-outline-secondary btn-sm"
-                disabled={safePage <= 1}
-                onClick={() => setPage(safePage - 1)}
-              >
-                <i className="bi bi-chevron-left" aria-hidden="true" />
-              </button>
-              <span className="small text-muted-rs">
-                Page {safePage} of {totalPages}
-              </span>
-              <button
-                type="button"
-                className="btn btn-outline-secondary btn-sm"
-                disabled={safePage >= totalPages}
-                onClick={() => setPage(safePage + 1)}
-              >
-                <i className="bi bi-chevron-right" aria-hidden="true" />
-              </button>
-            </div>
-          )}
         </div>
       )}
 

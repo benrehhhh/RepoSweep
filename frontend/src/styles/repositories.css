@@ -372,6 +372,9 @@
 .page-size-control {
   width: 90px;
 }
+.repo-pagination .page-btn {
+  min-width: 32px;
+}
 
 @media (max-width: 575.98px) {
   .repo-toolbar-card {
