@@ -34,7 +34,7 @@ every operation is recorded in an activity log.
 | Layer     | Choice                                                        |
 | --------- | ------------------------------------------------------------- |
 | Frontend  | React 18, Vite 6, React Router 6, TanStack Query, Bootstrap 5 (CSS only) + custom CSS, Bootstrap Icons |
-| Backend   | Python 3.13, Flask 3, SQLAlchemy 2, Flask-Limiter, PyMySQL    |
+| Backend   | Python 3.13, Flask 3, SQLAlchemy 2, Flask-Limiter, PyMySQL, Waitress (prod) |
 | Database  | MySQL 8.0 (local) — also runs on SQLite for zero-setup demo   |
 | Security  | HttpOnly SameSite session cookie, per-session CSRF token header, server-side bulk-op validation |
 
@@ -113,6 +113,49 @@ stored server-side only and never exposed to the frontend.
 
 ---
 
+## Running in production
+
+The backend ships with a WSGI entry point (`backend/wsgi.py`) so it can run under a
+production server. On Windows the recommended option is **Waitress** (bundled):
+
+```bash
+cd backend
+set FLASK_ENV=production
+python -m waitress --listen=0.0.0.0:5000 wsgi:app
+```
+
+With `FLASK_ENV=production` (`ProductionConfig`), the session cookie is marked
+`Secure`, so serve the backend over HTTPS (directly via a TLS terminator, or
+behind a reverse proxy like nginx):
+
+```nginx
+location /api/ {
+    proxy_pass http://127.0.0.1:5000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+```
+
+The frontend is a static Vite build (`npm run build` → `frontend/dist/`) — serve it
+with any static server/nginx and proxy `/api/` to the backend above.
+
+### Production environment notes
+
+- Set a strong, stable `SECRET_KEY` in `backend/.env` (the setup script generates one).
+- Rate limits default to single-process in-memory storage. For multi-worker or
+  containerized deploys set a shared backend:
+
+  ```env
+  RATELIMIT_STORAGE_URI=redis://localhost:6379
+  ```
+
+- In production, `session_cookie_secure=true` and `SESSION_COOKIE_SAMESITE=Lax`
+  apply automatically via `FLASK_ENV=production`.
+- Static files (`dist/`, `/*.woff`) should be served by the web server, not Flask.
+
+---
+
 ## Configuration reference
 
 Configuration is read from environment variables; the backend auto-loads
@@ -126,7 +169,9 @@ Configuration is read from environment variables; the backend auto-loads
 | `BACKEND_URL`          | `http://localhost:5000`                    | OAuth redirect base |
 | `GITHUB_CLIENT_ID/SECRET` | empty                                   | Enables live mode |
 | `MOCK_MODE`            | `false` (auto-true without OAuth creds)    | Force demo mode |
-| `SESSION_COOKIE_SECURE`| `false`                                    | Set `true` behind HTTPS |
+| `SESSION_COOKIE_SECURE`| `false` (`true` when `FLASK_ENV=production`) | Set cookie only over HTTPS |
+| `RATELIMIT_STORAGE_URI`| (memory)                                   | Shared backend for rate limits (e.g. `redis://…`) |
+| `FLASK_ENV`            | `development`                              | `production` enables `ProductionConfig` |
 | `BULK_MAX_ITEMS`       | `50`                                       | Max repos per bulk op |
 
 ---
@@ -137,6 +182,7 @@ Configuration is read from environment variables; the backend auto-loads
 RepoSweep/
 ├── backend/
 │   ├── run.py                 # dev server entry (port 5000)
+│   ├── wsgi.py                # production WSGI entry (Waitress etc.)
 │   ├── config.py              # env-driven configuration
 │   ├── app/
 │   │   ├── __init__.py        # Flask factory, error handlers, init-db CLI
