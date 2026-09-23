@@ -1,6 +1,6 @@
 import { NavLink } from 'react-router-dom';
 
-import BrandIcon from '../common/BrandIcon.jsx';
+import SweepMark from '../common/SweepMark.jsx';
 
 export const NAV_ITEMS = [
   { to: '/app', end: true, icon: 'bi-grid-1x2', label: 'Dashboard' },
@@ -41,7 +41,7 @@ export function Brand({ tagline = true }) {
   return (
     <a className="sidebar-brand" href="/">
       <span className="brand-mark" aria-hidden="true">
-        <BrandIcon fill />
+        <SweepMark size={16} />
       </span>
       <span className="d-flex flex-column">
         <span className="brand-name">RepoSweep</span>

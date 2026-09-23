@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="RepoSweep">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#4493f8"/>
+      <stop offset="1" stop-color="#0969da"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#g)"/>
+  <g transform="translate(4 0) rotate(-28 32 34)" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M32 13 V30"/>
+    <path d="M24.5 31.5 H39.5" stroke-width="4.5"/>
+    <path d="M26 34 L19 47" stroke-width="4"/>
+    <path d="M32 34 V48" stroke-width="4"/>
+    <path d="M38 34 L45 47" stroke-width="4"/>
+  </g>
+  <g stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity="0.9">
+    <path d="M10 22 h6"/>
+    <path d="M7 31 h7"/>
+    <path d="M11 40 h6"/>
+  </g>
+</svg>
