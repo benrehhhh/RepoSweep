@@ -369,9 +369,6 @@
   border-top: 1px solid var(--rs-border-subtle);
   background: var(--rs-surface);
 }
-.page-size-control {
-  width: 90px;
-}
 .repo-pagination .page-btn {
   min-width: 32px;
 }

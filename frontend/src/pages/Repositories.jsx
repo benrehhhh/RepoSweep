@@ -23,7 +23,7 @@ import LoadingState from '../components/common/LoadingState.jsx';
 import ErrorState from '../components/common/ErrorState.jsx';
 import EmptyState from '../components/common/EmptyState.jsx';
 
-const PAGE_SIZES = [20, 50, 100];
+const PAGE_SIZE = 20;
 
 function pageNumbers(current, total) {
   const pages = new Set([1, total, current - 1, current, current + 1]);
@@ -84,7 +84,6 @@ export default function Repositories() {
   }));
   const [sort, setSort] = useState({ key: 'updated', dir: 'desc' });
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(PAGE_SIZES[0]);
   const [selection, setSelection] = useState(() => new Set());
   const [details, setDetails] = useState(null);
   const [modal, setModal] = useState(null);
@@ -163,9 +162,9 @@ export default function Repositories() {
     return list;
   }, [filtered, sort]);
 
-  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
-  const pageItems = sorted.slice((safePage - 1) * pageSize, safePage * pageSize);
+  const pageItems = sorted.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
 
   const selectedRepos = useMemo(
     () => [...selection].map((name) => repoMap.get(name)).filter(Boolean),
@@ -174,7 +173,7 @@ export default function Repositories() {
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, filters, pageSize]);
+  }, [debouncedSearch, filters]);
 
   function toggleSelection(fullName) {
     setSelection((prev) => {
@@ -404,9 +403,9 @@ export default function Repositories() {
             <span className="text-muted-rs small">
               {sorted.length === 0
                 ? '0 repositories'
-                : `${(safePage - 1) * pageSize + 1}–${Math.min(safePage * pageSize, sorted.length)} of ${sorted.length}`}
+                : `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, sorted.length)} of ${sorted.length}`}
             </span>
-            {selection.size < sorted.length && sorted.length > pageSize && (
+            {selection.size < sorted.length && sorted.length > PAGE_SIZE && (
               <button type="button" className="btn btn-ghost btn-sm" onClick={selectAllFiltered}>
                 Select all {sorted.length} filtered
               </button>
@@ -452,20 +451,6 @@ export default function Repositories() {
               </button>
             </nav>
           )}
-          <div className="d-flex align-items-center gap-2">
-            <select
-              className="form-select form-select-sm page-size-control"
-              aria-label="Repositories per page"
-              value={pageSize}
-              onChange={(e) => setPageSize(Number(e.target.value))}
-            >
-              {PAGE_SIZES.map((n) => (
-                <option key={n} value={n}>
-                  {n} / page
-                </option>
-              ))}
-            </select>
-          </div>
         </div>
       )}
 
