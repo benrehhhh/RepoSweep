@@ -198,14 +198,6 @@ export default function Repositories() {
     });
   }
 
-  function selectAllFiltered() {
-    setSelection((prev) => {
-      const next = new Set(prev);
-      filtered.filter((r) => !r.protected).forEach((r) => next.add(r.full_name));
-      return next;
-    });
-  }
-
   function clearSelection() {
     setSelection(new Set());
   }
@@ -405,11 +397,6 @@ export default function Repositories() {
                 ? '0 repositories'
                 : `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, sorted.length)} of ${sorted.length}`}
             </span>
-            {selection.size < sorted.length && sorted.length > PAGE_SIZE && (
-              <button type="button" className="btn btn-ghost btn-sm" onClick={selectAllFiltered}>
-                Select all {sorted.length} filtered
-              </button>
-            )}
           </div>
           {totalPages > 1 && (
             <nav aria-label="Repository pages" className="d-flex align-items-center justify-content-center gap-1 flex-grow-1">
