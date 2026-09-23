@@ -78,7 +78,7 @@ export default function LandingPage() {
               className="d-grid place-items-center rounded"
               style={{ width: 28, height: 28, background: 'var(--rs-accent)', color: '#fff' }}
             >
-              <SweepMark size={16} />
+              <SweepMark size={20} />
             </span>
             <span className="fw-bold">RepoSweep</span>
           </Link>
@@ -119,7 +119,7 @@ export default function LandingPage() {
           <div className="row align-items-center g-5">
             <div className="col-lg-6">
               <span className="eyebrow">
-                <SweepMark size={15} className="align-middle" />
+                <SweepMark size={17} className="align-middle" />
                 Bulk GitHub repository cleanup
               </span>
               <h1 className="display-5 fw-bold mt-3 mb-3" style={{ letterSpacing: '-0.03em' }}>
@@ -273,8 +273,8 @@ export default function LandingPage() {
         <div className="container">
           <div className="row g-4">
             <div className="col-md-5">
-              <div className="d-flex align-items-center gap-2 mb-2">
-                <SweepMark size={16} />
+<div className="d-flex align-items-center gap-2 mb-2">
+                <SweepMark size={18} />
                 <span className="fw-bold text-white">RepoSweep</span>
               </div>
               <p className="mb-1" style={{ color: 'var(--rs-sidebar-muted)', fontSize: 13 }}>

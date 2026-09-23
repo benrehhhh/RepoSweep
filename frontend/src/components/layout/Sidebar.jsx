@@ -41,7 +41,7 @@ export function Brand({ tagline = true }) {
   return (
     <a className="sidebar-brand" href="/">
       <span className="brand-mark" aria-hidden="true">
-        <SweepMark size={16} />
+        <SweepMark size={20} />
       </span>
       <span className="d-flex flex-column">
         <span className="brand-name">RepoSweep</span>
