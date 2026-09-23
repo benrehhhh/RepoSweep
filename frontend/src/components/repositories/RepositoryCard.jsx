@@ -5,7 +5,13 @@ export default function RepositoryCard({ repo, selected, onToggle, onOpen }) {
   const isProtected = Boolean(repo.protected);
 
   return (
-    <div className={`repo-card ${selected ? 'selected' : ''}`}>
+    <div
+      className={`repo-card ${selected ? 'selected' : ''}`}
+      onClick={(e) => {
+        if (e.target.closest('a, input, button')) return;
+        onOpen(repo);
+      }}
+    >
       <div className="card-row">
         <input
           type="checkbox"

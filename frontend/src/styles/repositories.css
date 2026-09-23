@@ -34,6 +34,7 @@
 }
 .repo-table tbody tr {
   border-bottom: 1px solid var(--rs-border-subtle);
+  cursor: pointer;
 }
 .repo-table tbody tr:last-child {
   border-bottom: none;
@@ -217,6 +218,7 @@
   border: 1px solid var(--rs-border);
   border-radius: var(--rs-radius);
   padding: 12px;
+  cursor: pointer;
   transition: border-color 0.12s ease;
 }
 .repo-card:hover {

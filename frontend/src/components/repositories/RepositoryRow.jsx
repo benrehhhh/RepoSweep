@@ -17,7 +17,14 @@ export default function RepositoryRow({ repo, selected, onToggle, onOpen }) {
   const forks = repo.forks_count || 0;
 
   return (
-    <tr className={selected ? 'table-row-selected' : ''} style={selected ? { background: 'var(--rs-accent-muted)' } : undefined}>
+    <tr
+      className={selected ? 'table-row-selected' : ''}
+      style={selected ? { background: 'var(--rs-accent-muted)' } : undefined}
+      onClick={(e) => {
+        if (e.target.closest('a, input, button')) return;
+        onOpen(repo);
+      }}
+    >
       <td className="text-center" style={{ width: 40 }}>
         <input
           type="checkbox"
