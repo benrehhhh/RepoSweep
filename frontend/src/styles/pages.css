@@ -124,6 +124,15 @@
   border: 1px solid var(--rs-border);
   border-radius: var(--rs-radius-lg);
   padding: 16px 18px;
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+.stat-card:hover {
+  border-color: var(--rs-accent);
+  box-shadow: 0 2px 10px rgba(9, 105, 218, 0.12);
 }
 .stat-card .stat-label {
   font-size: 12px;

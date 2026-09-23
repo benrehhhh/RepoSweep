@@ -7,9 +7,9 @@ import { greeting, timeAgo } from '../lib/format.js';
 import LoadingState from '../components/common/LoadingState.jsx';
 import ErrorState from '../components/common/ErrorState.jsx';
 
-function StatCard({ icon, label, value, note, tone = '' }) {
+function StatCard({ icon, label, value, note, tone = '', to }) {
   return (
-    <div className={`stat-card h-100 ${tone}`}>
+    <Link to={to} className={`stat-card h-100 ${tone}`}>
       <div className="d-flex align-items-center justify-content-between mb-2">
         <span className="stat-label">{label}</span>
         <span className="stat-icon">
@@ -18,7 +18,7 @@ function StatCard({ icon, label, value, note, tone = '' }) {
       </div>
       <div className="stat-value">{value}</div>
       {note && <div className="stat-note">{note}</div>}
-    </div>
+    </Link>
   );
 }
 
@@ -82,22 +82,22 @@ export default function Dashboard() {
 
       <div className="row g-3 mb-4">
         <div className="col-6 col-md-4 col-xl-2">
-          <StatCard icon="bi-collection" label="Total" value={data.total} tone="stat-info" />
+          <StatCard icon="bi-collection" label="Total" value={data.total} tone="stat-info" to="/app/repositories" />
         </div>
         <div className="col-6 col-md-4 col-xl-2">
-          <StatCard icon="bi-lightning-charge-fill" label="Active" value={active} note="updated ≤ 90 days" />
+          <StatCard icon="bi-lightning-charge-fill" label="Active" value={active} note="updated ≤ 90 days" to="/app/repositories?status=active" />
         </div>
         <div className="col-6 col-md-4 col-xl-2">
-          <StatCard icon="bi-exclamation-triangle-fill" label="Potentially inactive" value={inactive} note="90–365 days" tone="stat-warn" />
+          <StatCard icon="bi-exclamation-triangle-fill" label="Potentially inactive" value={inactive} note="90–365 days" tone="stat-warn" to="/app/repositories?status=potentially-inactive" />
         </div>
         <div className="col-6 col-md-4 col-xl-2">
-          <StatCard icon="bi-moon-stars-fill" label="No recent activity" value={stale} note="more than 1 year" tone="stat-danger" />
+          <StatCard icon="bi-moon-stars-fill" label="No recent activity" value={stale} note="more than 1 year" tone="stat-danger" to="/app/repositories?status=long-inactive" />
         </div>
         <div className="col-6 col-md-4 col-xl-2">
-          <StatCard icon="bi-archive" label="Archived" value={archivedCount} note="read-only on GitHub" />
+          <StatCard icon="bi-archive" label="Archived" value={archivedCount} note="read-only on GitHub" to="/app/repositories?status=archived" />
         </div>
         <div className="col-6 col-md-4 col-xl-2">
-          <StatCard icon="bi-arrow-repeat" label="Recently updated" value={recently} note="in the last 90 days" />
+          <StatCard icon="bi-arrow-repeat" label="Recently updated" value={recently} note="in the last 90 days" to="/app/repositories?status=active" />
         </div>
       </div>
 
@@ -123,7 +123,7 @@ export default function Dashboard() {
                   {needsReview.slice(0, 6).map(({ repo, status }) => (
                     <li key={repo.id} className="list-group-item d-flex align-items-center justify-content-between gap-3">
                       <Link
-                        to="/app/repositories"
+                        to="/app/repositories?status=potentially-inactive"
                         className="text-decoration-none fw-semibold text-truncate"
                         style={{ color: 'var(--rs-text)' }}
                       >
