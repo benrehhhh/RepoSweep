@@ -154,6 +154,9 @@
 .modal-backdrop.show {
   opacity: 0.5;
 }
+.offcanvas-backdrop.show {
+  opacity: 0.5;
+}
 
 /* ---- Badges ---- */
 .badge {

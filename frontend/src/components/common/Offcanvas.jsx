@@ -35,7 +35,7 @@ export default function Offcanvas({
 
   return createPortal(
     <>
-      <div className="modal-backdrop fade show" aria-hidden="true" onClick={onClose} />
+      <div className="offcanvas-backdrop fade show" aria-hidden="true" onClick={onClose} />
       <div
         ref={panelRef}
         tabIndex={-1}
