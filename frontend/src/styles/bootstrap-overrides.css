@@ -1,0 +1,282 @@
+/*
+ * Bootstrap overrides — keep Bootstrap's component structure but map its
+ * colors to the RepoSweep design system and tighten developer-tool spacing.
+ */
+
+:root,
+[data-bs-theme='light'] {
+  --bs-body-bg: var(--rs-bg);
+  --bs-body-color: var(--rs-text);
+  --bs-body-font-family: var(--rs-font);
+  --bs-border-color: var(--rs-border);
+  --bs-border-color-translucent: var(--rs-border);
+  --bs-secondary-color: var(--rs-text-secondary);
+  --bs-secondary-bg: var(--rs-surface-alt);
+  --bs-primary: var(--rs-accent);
+  --bs-primary-rgb: 9, 105, 218;
+  --bs-danger: var(--rs-danger);
+  --bs-danger-rgb: 207, 34, 46;
+  --bs-success: var(--rs-success);
+  --bs-warning: var(--rs-warning);
+  --bs-border-radius: var(--rs-radius);
+  --bs-border-radius-sm: var(--rs-radius-sm);
+  --bs-border-radius-lg: var(--rs-radius-lg);
+}
+
+[data-bs-theme='dark'] {
+  --bs-border-color: var(--rs-border);
+  --bs-secondary-color: var(--rs-text-secondary);
+  --bs-secondary-bg: var(--rs-surface-alt);
+  --bs-primary: var(--rs-accent);
+  --bs-primary-rgb: 68, 147, 248;
+  --bs-danger: var(--rs-danger);
+  --bs-danger-rgb: 248, 81, 73;
+  --bs-success: var(--rs-success);
+  --bs-warning: var(--rs-warning);
+}
+
+/* ---- Buttons ---- */
+.btn {
+  font-weight: 500;
+  --bs-btn-border-radius: var(--rs-radius);
+}
+.btn-primary {
+  --bs-btn-bg: var(--rs-accent);
+  --bs-btn-border-color: var(--rs-accent);
+  --bs-btn-hover-bg: var(--rs-accent);
+  --bs-btn-hover-border-color: var(--rs-accent);
+  --bs-btn-active-bg: var(--rs-accent);
+  --bs-btn-active-border-color: var(--rs-accent);
+}
+.btn-danger {
+  --bs-btn-hover-bg: #b31623;
+  --bs-btn-hover-border-color: #b31623;
+  --bs-btn-active-bg: #9c131f;
+  --bs-btn-active-border-color: #9c131f;
+}
+.btn-outline-danger {
+  --bs-btn-color: var(--rs-danger);
+  --bs-btn-border-color: rgba(207, 34, 46, 0.55);
+  --bs-btn-hover-bg: var(--rs-danger);
+  --bs-btn-hover-border-color: var(--rs-danger);
+  --bs-btn-active-bg: var(--rs-danger);
+  --bs-btn-active-border-color: var(--rs-danger);
+}
+.btn-outline-secondary {
+  --bs-btn-color: var(--rs-text-secondary);
+  --bs-btn-border-color: var(--rs-border);
+  --bs-btn-hover-bg: var(--rs-surface-hover);
+  --bs-btn-hover-color: var(--rs-text);
+  --bs-btn-active-bg: var(--rs-surface-hover);
+  --bs-btn-active-color: var(--rs-text);
+}
+.btn-ghost {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--rs-text-secondary);
+  --bs-btn-hover-bg: var(--rs-surface-hover);
+  --bs-btn-hover-color: var(--rs-text);
+}
+.btn-ghost:hover {
+  background: var(--rs-surface-hover);
+  color: var(--rs-text);
+}
+.btn:focus-visible,
+.btn-ghost:focus-visible,
+.form-check-input:focus-visible,
+.form-control:focus-visible {
+  outline: 2px solid var(--rs-accent);
+  outline-offset: 1px;
+  box-shadow: none;
+}
+.btn:disabled {
+  cursor: not-allowed;
+}
+
+/* ---- Forms ---- */
+.form-control,
+.form-select {
+  border-color: var(--rs-border);
+  background-color: var(--rs-surface);
+  color: var(--rs-text);
+  font-size: 14px;
+  --bs-focus-border-color: var(--rs-accent);
+  --bs-focus-shadow-rgb: 9, 105, 218;
+}
+.form-control:focus,
+.form-select:focus {
+  border-color: var(--rs-accent);
+}
+.form-control::placeholder {
+  color: var(--rs-text-muted);
+}
+.form-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rs-text-secondary);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ---- Tables ---- */
+.table {
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--rs-text);
+  --bs-table-border-color: var(--rs-border-subtle);
+  --bs-table-hover-bg: var(--rs-surface-hover);
+  --bs-table-striped-bg: var(--rs-surface-alt);
+  margin-bottom: 0;
+}
+
+/* ---- Cards ---- */
+.card {
+  background-color: var(--rs-surface);
+  border: 1px solid var(--rs-border);
+  --bs-card-border-width: 1px;
+  --bs-card-border-color: var(--rs-border);
+  --bs-card-cap-bg: var(--rs-surface);
+  --bs-card-bg: var(--rs-surface);
+}
+
+/* ---- Modals ---- */
+.modal-content {
+  background-color: var(--rs-surface);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius-lg);
+}
+.modal-header {
+  border-bottom: 1px solid var(--rs-border-subtle);
+}
+.modal-footer {
+  border-top: 1px solid var(--rs-border-subtle);
+}
+.modal-backdrop.show {
+  opacity: 0.5;
+}
+
+/* ---- Badges ---- */
+.badge {
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+/* ---- Dropdown menus ---- */
+.dropdown-menu {
+  --bs-dropdown-bg: var(--rs-surface);
+  --bs-dropdown-border-color: var(--rs-border);
+  --bs-dropdown-item-hover-bg: var(--rs-surface-hover);
+  --bs-dropdown-item-hover-color: var(--rs-text);
+  --bs-dropdown-item-active-bg: var(--rs-accent-muted);
+  --bs-dropdown-item-active-color: var(--rs-accent);
+  --bs-dropdown-link-color: var(--rs-text);
+  --bs-dropdown-link-hover-color: var(--rs-text);
+  font-size: 14px;
+  border-radius: var(--rs-radius);
+  box-shadow: 0 8px 24px rgba(31, 35, 40, 0.12);
+  padding: 4px;
+  min-width: 220px;
+}
+.dropdown-item {
+  border-radius: var(--rs-radius-sm);
+  padding: 6px 10px;
+}
+.dropdown-item i {
+  color: var(--rs-text-muted);
+  margin-right: 8px;
+}
+
+/* ---- Offcanvas ---- */
+.offcanvas {
+  --bs-offcanvas-bg: var(--rs-surface);
+  --bs-offcanvas-border-color: var(--rs-border);
+  --bs-offcanvas-width: 420px;
+}
+
+/* ---- Alerts ---- */
+.alert {
+  border-radius: var(--rs-radius);
+  font-size: 14px;
+}
+.alert-warning {
+  --bs-alert-bg: var(--rs-warning-muted);
+  --bs-alert-border-color: rgba(154, 103, 0, 0.25);
+  --bs-alert-color: var(--rs-warning);
+  border: 1px solid var(--bs-alert-border-color);
+}
+.alert-danger {
+  --bs-alert-bg: var(--rs-danger-muted);
+  --bs-alert-border-color: rgba(207, 34, 46, 0.25);
+  --bs-alert-color: var(--rs-danger);
+  border: 1px solid var(--bs-alert-border-color);
+}
+.alert-success {
+  --bs-alert-bg: var(--rs-success-muted);
+  --bs-alert-border-color: rgba(26, 127, 55, 0.25);
+  --bs-alert-color: var(--rs-success);
+  border: 1px solid var(--bs-alert-border-color);
+}
+
+/* ---- Checkboxes ---- */
+.form-check-input {
+  border-color: var(--rs-border-strong);
+  cursor: pointer;
+}
+.form-check-input:checked {
+  background-color: var(--rs-accent);
+  border-color: var(--rs-accent);
+}
+.form-check-input:disabled {
+  cursor: not-allowed;
+}
+
+/* ---- List groups ---- */
+.list-group {
+  --bs-list-group-bg: var(--rs-surface);
+  --bs-list-group-color: var(--rs-text);
+  --bs-list-group-border-color: var(--rs-border-subtle);
+  --bs-list-group-item-bg: var(--rs-surface);
+  --bs-list-group-action-hover-bg: var(--rs-surface-hover);
+  --bs-list-group-action-active-bg: var(--rs-accent-muted);
+  border-radius: var(--rs-radius);
+}
+
+/* Progress bars */
+.progress {
+  --bs-progress-bg: var(--rs-surface-sunken);
+  background-color: var(--rs-surface-sunken);
+  border-radius: 999px;
+}
+
+hr {
+  border-color: var(--rs-border);
+  opacity: 1;
+}
+
+::selection {
+  background: var(--rs-accent-muted);
+}
+
+/* Scrollbars (WebKit) */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--rs-border);
+  border-radius: 6px;
+  border: 3px solid var(--rs-bg);
+}
+
+.text-fire {
+  color: var(--rs-danger);
+}
+.icon-danger {
+  color: var(--rs-danger);
+}
+.icon-success {
+  color: var(--rs-success);
+}
+.icon-warning {
+  color: var(--rs-warning);
+}

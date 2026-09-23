@@ -1,0 +1,378 @@
+/* Repository management page */
+
+.repo-toolbar-card {
+  background: var(--rs-surface);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius-lg);
+  padding: 14px 16px;
+}
+
+.repo-table-wrap {
+  background: var(--rs-surface);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius-lg);
+  overflow: hidden;
+}
+
+.repo-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13.5px;
+}
+.repo-table th {
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--rs-text-secondary);
+  background: var(--rs-surface-alt);
+  border-bottom: 1px solid var(--rs-border);
+  padding: 10px 12px;
+  white-space: nowrap;
+  user-select: none;
+}
+.repo-table tbody tr {
+  border-bottom: 1px solid var(--rs-border-subtle);
+}
+.repo-table tbody tr:last-child {
+  border-bottom: none;
+}
+.repo-table tbody tr:hover {
+  background: var(--rs-surface-hover);
+}
+.repo-table td {
+  padding: 10px 12px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--rs-border-subtle);
+}
+.repo-table tr:last-child td {
+  border-bottom: none;
+}
+
+.repo-name-link {
+  font-weight: 600;
+  color: var(--rs-text);
+  text-decoration: none;
+  cursor: pointer;
+}
+.repo-name-link:hover {
+  color: var(--rs-accent);
+  text-decoration: underline;
+}
+.repo-name-wrap {
+  min-width: 240px;
+}
+.repo-description {
+  color: var(--rs-text-secondary);
+  font-size: 12.5px;
+  margin-top: 2px;
+  max-width: 480px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.repo-meta-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
+/* Status badges */
+.repo-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 999px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+.repo-status.status-active {
+  color: var(--rs-success);
+  background: var(--rs-success-muted);
+  border: 1px solid rgba(26, 127, 55, 0.22);
+}
+.repo-status.status-inactive {
+  color: var(--rs-warning);
+  background: var(--rs-warning-muted);
+  border: 1px solid rgba(154, 103, 0, 0.22);
+}
+.repo-status.status-stale {
+  color: var(--rs-danger);
+  background: var(--rs-danger-muted);
+  border: 1px solid rgba(207, 34, 46, 0.22);
+}
+.repo-status.status-archived {
+  color: var(--rs-text-secondary);
+  background: var(--rs-surface-alt);
+  border: 1px solid var(--rs-border);
+}
+.repo-status.status-unknown {
+  color: var(--rs-text-secondary);
+  background: var(--rs-surface-alt);
+  border: 1px solid var(--rs-border-subtle);
+}
+
+.protected-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--rs-accent);
+  background: var(--rs-accent-muted);
+  border: 1px solid rgba(9, 105, 218, 0.25);
+  border-radius: 999px;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+
+/* Visibility / language chips */
+.vis-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--rs-text-secondary);
+  white-space: nowrap;
+}
+.vis-chip i {
+  font-size: 13px;
+}
+
+/* Selection toolbar */
+.selection-bar {
+  position: sticky;
+  bottom: 20px;
+  z-index: 1000;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--rs-surface);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius-lg);
+  box-shadow: 0 8px 24px rgba(31, 35, 40, 0.14);
+  padding: 10px 14px;
+  animation: bar-in 0.18s ease-out;
+}
+@keyframes bar-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.selection-count {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--rs-text);
+}
+
+/* Filter chips */
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--rs-accent);
+  background: var(--rs-accent-muted);
+  border: 1px solid rgba(9, 105, 218, 0.3);
+  border-radius: 999px;
+  padding: 3px 10px 3px 12px;
+  cursor: default;
+}
+.filter-chip .clear {
+  cursor: pointer;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  font-size: 12px;
+  line-height: 1;
+}
+.filter-chip .clear:hover {
+  background: rgba(9, 105, 218, 0.18);
+}
+
+/* Repo list count text */
+.repo-count-line {
+  font-size: 13px;
+  color: var(--rs-text-secondary);
+  white-space: nowrap;
+}
+
+/* Mobile repo cards */
+.repo-card {
+  background: var(--rs-surface);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius);
+  padding: 12px;
+  transition: border-color 0.12s ease;
+}
+.repo-card:hover {
+  border-color: var(--rs-border-strong);
+}
+.repo-card.selected {
+  border-color: var(--rs-accent);
+  background: var(--rs-accent-muted);
+}
+.repo-card .card-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+/* Static row styling for details list in modals */
+.repo-line-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--rs-border-subtle);
+  border-radius: var(--rs-radius);
+  background: var(--rs-surface-alt);
+  font-size: 13.5px;
+}
+.repo-line-item .icon-wrap {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--rs-radius-sm);
+  background: var(--rs-surface);
+  border: 1px solid var(--rs-border-subtle);
+}
+.repo-line-item .icon-wrap.ok {
+  color: var(--rs-success);
+}
+.repo-line-item .icon-wrap.bad {
+  color: var(--rs-danger);
+}
+.repo-line-item .icon-wrap.skip {
+  color: var(--rs-accent);
+}
+.repo-line-item .mono {
+  font-size: 13px;
+}
+
+/* Sort control */
+.sort-control .btn {
+  border-color: var(--rs-border);
+  color: var(--rs-text);
+}
+.sort-control .btn:hover {
+  background: var(--rs-surface-hover);
+}
+
+/* Details panel */
+.details-hero {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-bottom: 1px solid var(--rs-border-subtle);
+}
+.details-hero .avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--rs-radius);
+}
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  font-size: 13px;
+}
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--rs-border-subtle);
+}
+.detail-row dt {
+  color: var(--rs-text-secondary);
+  font-weight: 500;
+  margin: 0;
+  min-width: 96px;
+}
+.detail-row dd {
+  margin: 0;
+  text-align: right;
+  word-break: break-word;
+  font-weight: 500;
+}
+
+/* Skeleton rows */
+.skeleton {
+  border-radius: var(--rs-radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--rs-surface-alt) 25%,
+    var(--rs-surface-hover) 50%,
+    var(--rs-surface-alt) 75%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+@keyframes shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+/* Operation progress / result */
+.op-status-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  flex: 0 0 auto;
+}
+.op-status-icon.ok {
+  color: var(--rs-success);
+  background: var(--rs-success-muted);
+}
+.op-status-icon.bad {
+  color: var(--rs-danger);
+  background: var(--rs-danger-muted);
+}
+.op-status-icon.skip {
+  color: var(--rs-warning);
+  background: var(--rs-warning-muted);
+}
+
+/* Pagination footer */
+.repo-pagination {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--rs-border-subtle);
+  background: var(--rs-surface);
+}
+.page-size-control {
+  width: 90px;
+}
+
+@media (max-width: 575.98px) {
+  .repo-toolbar-card {
+    padding: 10px;
+  }
+}

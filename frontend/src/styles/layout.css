@@ -1,0 +1,205 @@
+/* App shell: sidebar + topbar + content layout */
+
+.app-shell {
+  min-height: 100vh;
+  background: var(--rs-bg);
+}
+
+.app-sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 248px;
+  flex: 0 0 248px;
+  background: var(--rs-sidebar-bg);
+  border-right: 1px solid var(--rs-sidebar-border);
+  color: var(--rs-sidebar-text);
+  display: flex;
+  flex-direction: column;
+  z-index: 1020;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 18px 20px;
+  color: #ffffff;
+  text-decoration: none;
+  border-bottom: 1px solid var(--rs-sidebar-border);
+}
+.sidebar-brand:hover {
+  color: #ffffff;
+}
+.sidebar-brand .brand-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--rs-radius-sm);
+  background: var(--rs-sidebar-accent);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+}
+.sidebar-brand .brand-name {
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: -0.01em;
+}
+.sidebar-brand .brand-tagline {
+  font-size: 11px;
+  color: var(--rs-sidebar-muted);
+  font-weight: 400;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 12px 10px;
+  overflow-y: auto;
+}
+.sidebar-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--rs-sidebar-muted);
+  padding: 10px 10px 6px;
+}
+.sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  margin: 1px 0;
+  border-radius: var(--rs-radius);
+  color: var(--rs-sidebar-text);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  position: relative;
+}
+.sidebar-link:hover {
+  background: var(--rs-sidebar-hover);
+  color: var(--rs-sidebar-text);
+}
+.sidebar-link.active {
+  background: var(--rs-sidebar-active);
+  color: var(--rs-sidebar-active-text);
+}
+.sidebar-link.active::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--rs-sidebar-accent);
+}
+.sidebar-link i {
+  width: 18px;
+  text-align: center;
+  font-size: 16px;
+  color: var(--rs-sidebar-muted);
+}
+.sidebar-link.active i {
+  color: var(--rs-sidebar-active-text);
+}
+.sidebar-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--rs-sidebar-border);
+  font-size: 12px;
+  color: var(--rs-sidebar-muted);
+}
+
+/* Topbar */
+.app-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 1010;
+  background: color-mix(in srgb, var(--rs-surface) 88%, transparent);
+  backdrop-filter: blur(6px);
+  border-bottom: 1px solid var(--rs-border-subtle);
+  padding: 0 8px;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.app-topbar .page-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--rs-text);
+  margin: 0;
+}
+
+/* Main content column */
+.app-main {
+  flex: 1;
+  min-width: 0;
+}
+.app-content {
+  padding: 24px;
+  max-width: 1400px;
+}
+
+/* Topbar user menu */
+.user-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid transparent;
+  border-radius: var(--rs-radius);
+  padding: 4px 8px 4px 4px;
+  background: transparent;
+  color: var(--rs-text);
+}
+.user-chip:hover {
+  background: var(--rs-surface-hover);
+  border-color: var(--rs-border-subtle);
+}
+.user-chip .avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+/* Demo badge */
+.demo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--rs-warning);
+  border: 1px dashed rgba(154, 103, 0, 0.45);
+  background: var(--rs-warning-muted);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+@media (max-width: 991.98px) {
+  .app-sidebar {
+    display: none;
+  }
+}
+
+/* Offcanvas navigation reuses sidebar styles */
+.offcanvas-nav .offcanvas-body {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.offcanvas-nav .sidebar-nav {
+  padding-bottom: 20px;
+}
+.offcanvas-nav .sidebar-brand {
+  color: var(--rs-text);
+  border-color: var(--rs-border-subtle);
+}
+.offcanvas-nav .sidebar-brand .brand-name {
+  color: var(--rs-text);
+}

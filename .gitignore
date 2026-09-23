@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+.venv/
+venv/
+
+# Build outputs
+frontend/dist/
+__pycache__/
+*.pyc
+*.pyo
+
+# Environment (never commit secrets)
+.env
+backend/.env
+
+# Database / local state
+*.sqlite3
+*.db
+
+# Test / tooling caches
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

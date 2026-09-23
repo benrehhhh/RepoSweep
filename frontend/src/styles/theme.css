@@ -1,0 +1,149 @@
+/*
+ * RepoSweep design system
+ * Light-first, developer-tool aesthetic. All colors flow through these
+ * variables so dark mode (and future theming) stays consistent.
+ */
+
+:root,
+[data-bs-theme='light'] {
+  --rs-bg: #f6f8fa;
+  --rs-surface: #ffffff;
+  --rs-surface-alt: #f6f8fa;
+  --rs-surface-hover: #f3f4f6;
+  --rs-surface-sunken: #eef1f4;
+
+  --rs-text: #1f2328;
+  --rs-text-secondary: #57606a;
+  --rs-text-muted: #8b949e;
+
+  --rs-border: #d0d7de;
+  --rs-border-strong: #afb8c1;
+  --rs-border-subtle: #eaeef2;
+
+  --rs-accent: #0969da;
+  --rs-accent-muted: rgba(9, 105, 218, 0.09);
+  --rs-accent-contrast: #ffffff;
+
+  --rs-danger: #cf222e;
+  --rs-danger-muted: rgba(207, 34, 46, 0.08);
+  --rs-danger-contrast: #ffffff;
+
+  --rs-success: #1a7f37;
+  --rs-success-muted: rgba(26, 127, 55, 0.09);
+
+  --rs-warning: #9a6700;
+  --rs-warning-muted: rgba(154, 103, 0, 0.1);
+
+  --rs-sidebar-bg: #24292f;
+  --rs-sidebar-border: #32383f;
+  --rs-sidebar-text: #e6edf3;
+  --rs-sidebar-muted: #aab1ba;
+  --rs-sidebar-hover: rgba(255, 255, 255, 0.055);
+  --rs-sidebar-active: rgba(31, 111, 235, 0.28);
+  --rs-sidebar-active-text: #ffffff;
+  --rs-sidebar-accent: #1f6feb;
+
+  --rs-radius-sm: 4px;
+  --rs-radius: 6px;
+  --rs-radius-lg: 10px;
+
+  --rs-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica,
+    Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji';
+  --rs-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas,
+    'Liberation Mono', monospace;
+}
+
+[data-bs-theme='dark'] {
+  --rs-bg: #0d1117;
+  --rs-surface: #161b22;
+  --rs-surface-alt: #1a2026;
+  --rs-surface-hover: #1c2129;
+  --rs-surface-sunken: #0a0d11;
+
+  --rs-text: #e6edf3;
+  --rs-text-secondary: #9aa3ad;
+  --rs-text-muted: #7d8590;
+
+  --rs-border: #30363d;
+  --rs-border-strong: #70707a;
+  --rs-border-subtle: #24292f;
+
+  --rs-accent: #4493f8;
+  --rs-accent-muted: rgba(68, 147, 248, 0.14);
+  --rs-accent-contrast: #ffffff;
+
+  --rs-danger: #f85149;
+  --rs-danger-muted: rgba(248, 81, 73, 0.14);
+  --rs-danger-contrast: #ffffff;
+
+  --rs-success: #3fb950;
+  --rs-success-muted: rgba(63, 185, 80, 0.14);
+
+  --rs-warning: #d29922;
+  --rs-warning-muted: rgba(210, 153, 34, 0.14);
+
+  --rs-sidebar-bg: #11161c;
+  --rs-sidebar-border: #21262d;
+  --rs-sidebar-text: #e6edf3;
+  --rs-sidebar-muted: #8b949e;
+  --rs-sidebar-hover: rgba(255, 255, 255, 0.06);
+  --rs-sidebar-active: rgba(68, 147, 248, 0.22);
+  --rs-sidebar-active-text: #ffffff;
+  --rs-sidebar-accent: #4493f8;
+}
+
+body {
+  margin: 0;
+  background-color: var(--rs-bg);
+  color: var(--rs-text);
+  font-family: var(--rs-font);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--rs-accent);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-weight: 600;
+  color: var(--rs-text);
+}
+
+.mono {
+  font-family: var(--rs-mono);
+}
+
+.text-secondary-rs {
+  color: var(--rs-text-secondary) !important;
+}
+.text-muted-rs {
+  color: var(--rs-text-muted) !important;
+}
+
+.code-chip {
+  font-family: var(--rs-mono);
+  font-size: 12px;
+  color: var(--rs-text-secondary);
+  background: var(--rs-surface-alt);
+  border: 1px solid var(--rs-border-subtle);
+  border-radius: var(--rs-radius-sm);
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+
+/* Language color dots */
+.lang-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  flex: 0 0 auto;
+  background: var(--rs-text-muted);
+}
