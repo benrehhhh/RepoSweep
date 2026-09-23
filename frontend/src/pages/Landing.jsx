@@ -78,7 +78,7 @@ export default function LandingPage() {
               className="d-grid place-items-center rounded"
               style={{ width: 28, height: 28, background: 'var(--rs-accent)', color: '#fff' }}
             >
-              <SweepMark size={20} />
+              <SweepMark size={22} />
             </span>
             <span className="fw-bold">RepoSweep</span>
           </Link>
