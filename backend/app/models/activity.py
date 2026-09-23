@@ -1,63 +1,101 @@
-from datetime import datetime, timezone
+"""MongoDB-backed activity log collections (activity_logs + operation_items)."""
 
-from app.extensions import db
-from app.models.user import utcnow, BigIntId
+from app.extensions import mongo
+from app.models.base import iso, to_object_id, utcnow
 
 
-class ActivityLog(db.Model):
-    __tablename__ = "activity_logs"
+class OperationItem:
+    collection_name = "operation_items"
 
-    id = db.Column(BigIntId, primary_key=True, autoincrement=True)
-    user_id = db.Column(
-        BigIntId, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
-    )
-    action = db.Column(db.String(32), nullable=False, index=True)
-    repository_count = db.Column(db.Integer, nullable=False, default=0)
-    status = db.Column(db.String(16), nullable=False, default="success")
-    created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
+    def __init__(self, doc):
+        self._doc = doc
 
-    user = db.relationship("User", back_populates="activity_logs")
-    operation_items = db.relationship(
-        "OperationItem", back_populates="activity_log", cascade="all, delete-orphan"
-    )
+    @classmethod
+    def collection(cls):
+        return mongo.db[cls.collection_name]
+
+    def to_dict(self):
+        return {
+            "owner": self._doc.get("owner"),
+            "repository_name": self._doc.get("repository_name"),
+            "full_name": f"{self._doc.get('owner')}/{self._doc.get('repository_name')}",
+            "status": self._doc.get("status"),
+            "error_message": self._doc.get("error_message"),
+        }
+
+    @classmethod
+    def create_many(cls, activity_log_id, items):
+        docs = [
+            {
+                "activity_log_id": to_object_id(activity_log_id),
+                "owner": item["owner"],
+                "repository_name": item["repository_name"],
+                "status": item["status"],
+                "error_message": item.get("error_message"),
+                "created_at": utcnow(),
+            }
+            for item in items
+        ]
+        if docs:
+            cls.collection().insert_many(docs)
+
+    @classmethod
+    def for_activity(cls, activity_log_id):
+        oid = to_object_id(activity_log_id)
+        if oid is None:
+            return []
+        docs = cls.collection().find({"activity_log_id": oid})
+        return [cls(doc) for doc in docs]
+
+
+class ActivityLog:
+    collection_name = "activity_logs"
+
+    def __init__(self, doc):
+        self._doc = doc
+
+    @classmethod
+    def collection(cls):
+        return mongo.db[cls.collection_name]
+
+    @property
+    def id(self):
+        return str(self._doc["_id"])
 
     def to_dict(self, include_items=False):
         data = {
             "id": self.id,
-            "action": self.action,
-            "repository_count": self.repository_count,
-            "status": self.status,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "action": self._doc.get("action"),
+            "repository_count": self._doc.get("repository_count", 0),
+            "status": self._doc.get("status", "success"),
+            "created_at": iso(self._doc.get("created_at")),
         }
         if include_items:
-            data["items"] = [item.to_dict() for item in self.operation_items]
+            data["items"] = [item.to_dict() for item in OperationItem.for_activity(self.id)]
         return data
 
-
-class OperationItem(db.Model):
-    __tablename__ = "operation_items"
-
-    id = db.Column(BigIntId, primary_key=True, autoincrement=True)
-    activity_log_id = db.Column(
-        BigIntId,
-        db.ForeignKey("activity_logs.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True,
-    )
-    owner = db.Column(db.String(255), nullable=False)
-    repository_name = db.Column(db.String(255), nullable=False)
-    status = db.Column(db.String(16), nullable=False, default="success")
-    error_message = db.Column(db.Text, nullable=True)
-    created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
-
-    activity_log = db.relationship("ActivityLog", back_populates="operation_items")
-
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "owner": self.owner,
-            "repository_name": self.repository_name,
-            "full_name": f"{self.owner}/{self.repository_name}",
-            "status": self.status,
-            "error_message": self.error_message,
+    @classmethod
+    def create(cls, user_id, action, repository_count, status):
+        doc = {
+            "user_id": to_object_id(user_id),
+            "action": action,
+            "repository_count": repository_count,
+            "status": status,
+            "created_at": utcnow(),
         }
+        result = cls.collection().insert_one(doc)
+        doc["_id"] = result.inserted_id
+        return cls(doc)
+
+    @classmethod
+    def find_by_user(cls, user_id, limit=200):
+        oid = to_object_id(user_id)
+        if oid is None:
+            return []
+        docs = (
+            cls.collection()
+            .find({"user_id": oid})
+            .sort("created_at", -1)
+            .limit(limit)
+        )
+        return [cls(doc) for doc in docs]

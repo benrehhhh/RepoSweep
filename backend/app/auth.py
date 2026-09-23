@@ -5,7 +5,6 @@ from functools import wraps
 
 from flask import current_app, g, session
 
-from app.extensions import db
 from app.models.user import User
 from app.utils.errors import AuthError
 
@@ -42,7 +41,7 @@ def login_github(github_profile, access_token, token_scope):
     user.github_id = github_profile.get("id")
     user.github_access_token = access_token
     user.token_scope = token_scope
-    db.session.commit()
+    user.save()
     _new_session(user)
     return user
 
@@ -51,7 +50,7 @@ def current_user():
     user_id = session.get("user_id")
     if not user_id:
         return None
-    return db.session.get(User, user_id)
+    return User.find_by_id(user_id)
 
 
 def require_user():

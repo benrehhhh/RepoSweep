@@ -1,37 +1,66 @@
-from datetime import datetime, timezone
+"""MongoDB-backed user and protected-repository collections.
 
-from sqlalchemy import BigInteger
+Keeps the same method signatures and JSON shapes the rest of the app and the
+frontend rely on; only the storage engine changed (SQLAlchemy/MySQL -> PyMongo).
+"""
 
-from app.extensions import db
-
-
-def utcnow():
-    return datetime.now(timezone.utc).replace(tzinfo=None)
-
-
-# BIGINT auto-incrementing primary keys work on MySQL; SQLite needs INTEGER.
-BigIntId = BigInteger().with_variant(db.Integer, "sqlite")
+from app.extensions import mongo
+from app.models.base import iso, to_object_id, utcnow
 
 
-class User(db.Model):
-    __tablename__ = "users"
+class User:
+    collection_name = "users"
 
-    id = db.Column(BigIntId, primary_key=True, autoincrement=True)
-    github_id = db.Column(db.BigInteger, nullable=True, index=True)
-    username = db.Column(db.String(255), unique=True, nullable=False, index=True)
-    display_name = db.Column(db.String(255), nullable=True)
-    avatar_url = db.Column(db.Text, nullable=True)
-    github_access_token = db.Column(db.Text, nullable=True)
-    token_scope = db.Column(db.String(255), nullable=True)
-    created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
-    updated_at = db.Column(db.DateTime, nullable=False, default=utcnow, onupdate=utcnow)
+    def __init__(self, doc):
+        self._doc = doc
 
-    protected_repositories = db.relationship(
-        "ProtectedRepository", back_populates="user", cascade="all, delete-orphan"
-    )
-    activity_logs = db.relationship(
-        "ActivityLog", back_populates="user", cascade="all, delete-orphan"
-    )
+    @classmethod
+    def collection(cls):
+        return mongo.db[cls.collection_name]
+
+    @property
+    def id(self):
+        return str(self._doc["_id"])
+
+    @property
+    def github_id(self):
+        return self._doc.get("github_id")
+
+    @github_id.setter
+    def github_id(self, value):
+        self._doc["github_id"] = value
+
+    @property
+    def username(self):
+        return self._doc.get("username")
+
+    @property
+    def display_name(self):
+        return self._doc.get("display_name")
+
+    @property
+    def avatar_url(self):
+        return self._doc.get("avatar_url")
+
+    @property
+    def github_access_token(self):
+        return self._doc.get("github_access_token")
+
+    @github_access_token.setter
+    def github_access_token(self, value):
+        self._doc["github_access_token"] = value
+
+    @property
+    def token_scope(self):
+        return self._doc.get("token_scope")
+
+    @token_scope.setter
+    def token_scope(self, value):
+        self._doc["token_scope"] = value
+
+    def save(self):
+        self._doc["updated_at"] = utcnow()
+        self.collection().replace_one({"_id": self._doc["_id"]}, self._doc)
 
     def to_dict(self):
         return {
@@ -41,38 +70,68 @@ class User(db.Model):
             "display_name": self.display_name,
             "avatar_url": self.avatar_url,
             "is_demo": self.github_id is None,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "created_at": iso(self._doc.get("created_at")),
         }
 
     @classmethod
     def find_by_username(cls, username):
-        return cls.query.filter_by(username=username).first()
+        doc = cls.collection().find_one({"username": username})
+        return cls(doc) if doc else None
+
+    @classmethod
+    def find_by_id(cls, user_id):
+        oid = to_object_id(user_id)
+        if oid is None:
+            return None
+        doc = cls.collection().find_one({"_id": oid})
+        return cls(doc) if doc else None
 
     @classmethod
     def get_or_create(cls, username, **fields):
         user = cls.find_by_username(username)
-        if user is None:
-            user = cls(username=username, **fields)
-            db.session.add(user)
-            db.session.commit()
-        return user
+        if user is not None:
+            return user
+        doc = {
+            "username": username,
+            "github_id": None,
+            "display_name": None,
+            "avatar_url": None,
+            "github_access_token": None,
+            "token_scope": None,
+            "created_at": utcnow(),
+            "updated_at": utcnow(),
+        }
+        doc.update(fields)
+        result = cls.collection().insert_one(doc)
+        doc["_id"] = result.inserted_id
+        return cls(doc)
 
 
-class ProtectedRepository(db.Model):
-    __tablename__ = "protected_repositories"
+class ProtectedRepository:
+    collection_name = "protected_repositories"
 
-    id = db.Column(BigIntId, primary_key=True, autoincrement=True)
-    user_id = db.Column(BigIntId, db.ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    github_repo_id = db.Column(db.BigInteger, nullable=True)
-    owner = db.Column(db.String(255), nullable=False)
-    repository_name = db.Column(db.String(255), nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False, default=utcnow)
+    def __init__(self, doc):
+        self._doc = doc
 
-    __table_args__ = (
-        db.UniqueConstraint("user_id", "owner", "repository_name", name="uq_user_owner_repo"),
-    )
+    @classmethod
+    def collection(cls):
+        return mongo.db[cls.collection_name]
 
-    user = db.relationship("User", back_populates="protected_repositories")
+    @property
+    def id(self):
+        return str(self._doc["_id"])
+
+    @property
+    def user_id(self):
+        return str(self._doc["user_id"])
+
+    @property
+    def owner(self):
+        return self._doc.get("owner")
+
+    @property
+    def repository_name(self):
+        return self._doc.get("repository_name")
 
     @property
     def full_name(self):
@@ -84,7 +143,7 @@ class ProtectedRepository(db.Model):
             "owner": self.owner,
             "repository_name": self.repository_name,
             "full_name": self.full_name,
-            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "created_at": iso(self._doc.get("created_at")),
         }
 
     @classmethod
@@ -93,9 +152,42 @@ class ProtectedRepository(db.Model):
 
     @classmethod
     def keys_for_user(cls, user_id):
-        rows = cls.query.filter_by(user_id=user_id).all()
-        return {cls.key_for_user(user_id, r.owner, r.repository_name) for r in rows}
+        oid = to_object_id(user_id)
+        if oid is None:
+            return set()
+        rows = cls.collection().find({"user_id": oid})
+        return {cls.key_for_user(user_id, r["owner"], r["repository_name"]) for r in rows}
 
     @classmethod
     def find_by_user(cls, user_id):
-        return cls.query.filter_by(user_id=user_id).order_by(cls.created_at.desc()).all()
+        oid = to_object_id(user_id)
+        if oid is None:
+            return []
+        docs = cls.collection().find({"user_id": oid}).sort("created_at", -1)
+        return [cls(doc) for doc in docs]
+
+    @classmethod
+    def find_by_id(cls, item_id):
+        oid = to_object_id(item_id)
+        if oid is None:
+            return None
+        doc = cls.collection().find_one({"_id": oid})
+        return cls(doc) if doc else None
+
+    @classmethod
+    def create(cls, user_id, owner, repository_name):
+        doc = {
+            "user_id": to_object_id(user_id),
+            "owner": owner,
+            "repository_name": repository_name,
+            "created_at": utcnow(),
+        }
+        result = cls.collection().insert_one(doc)
+        doc["_id"] = result.inserted_id
+        return cls(doc)
+
+    @classmethod
+    def delete_by_id(cls, item_id):
+        oid = to_object_id(item_id)
+        if oid is not None:
+            cls.collection().delete_one({"_id": oid})

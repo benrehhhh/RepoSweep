@@ -33,16 +33,18 @@ every operation is recorded in an activity log.
 
 | Layer     | Choice                                                        |
 | --------- | ------------------------------------------------------------- |
-| Frontend  | React 18, Vite 6, React Router 6, TanStack Query, Bootstrap 5 (CSS only) + custom CSS, Bootstrap Icons |
-| Backend   | Python 3.13, Flask 3, SQLAlchemy 2, Flask-Limiter, PyMySQL, Waitress (prod) |
-| Database  | MySQL 8.0 (local) — also runs on SQLite for zero-setup demo   |
+| Frontend  | React 19, Vite 6, React Router 7, TanStack Query, Bootstrap 5 (CSS only) + custom CSS, Bootstrap Icons |
+| Backend   | Python 3.13, Flask 3, PyMongo 4, Flask-Limiter, Waitress (local prod) |
+| Database  | MongoDB (Atlas M0 free in production) — `memory://` mongomock for zero-setup demo |
 | Security  | HttpOnly SameSite session cookie, per-session CSRF token header, server-side bulk-op validation |
+| Hosting   | Vercel (static SPA + Python `/api` function, free tier) |
 
 ---
 
 ## Quick start (demo mode)
 
-Prerequisites: **Node 20+**, **Python 3.11+**, and optionally **MySQL 8.0** locally.
+Prerequisites: **Node 20+** and **Python 3.11+**. No database needed — demo mode
+runs on an in-memory mongomock store (`MONGODB_URI=memory://`).
 
 ```bash
 # 1. Backend
@@ -50,7 +52,6 @@ cd backend
 python -m venv .venv
 .venv\Scripts\activate                # Windows:  .venv\Scripts\activate
 pip install -r requirements.txt
-copy .env.example ..\.env.example     # just for reference; see below
 python run.py                         # http://localhost:5000
 
 # 2. Frontend (new terminal)
@@ -61,32 +62,22 @@ npm run dev                           # http://localhost:5173
 
 Open **http://localhost:5173** → **Try the live demo** → no login prompt, no tokens.
 
-### Database setup (pick one)
+### Database
 
-- **Option A — MySQL (recommended):** create the database, app user, and schema
-  with one script. It prompts for your *MySQL root* password (used only to create
-  the `reposweep` DB/user, never stored), then writes `backend/.env`:
-
-  ```powershell
-  powershell -ExecutionPolicy Bypass -File scripts\setup_db.ps1
-  ```
-
-  It creates database `reposweep`, user `reposweep` / password `reposweep`, applies
-  `database/schema.sql`, and generates `backend/.env` with a random `SECRET_KEY`.
-
-  > MySQL 8 note: the first `setup_db.ps1` run may print a warning on the schema
-  > step — re-run the script; it is idempotent (`IF NOT EXISTS` everywhere).
-
-- **Option B — SQLite (zero setup):** compatible out of the box. Set
-  `DATABASE_URL=sqlite:///reposweep.db` in `backend/.env` (or let it default) and
-  run `flask init-db` from `backend/` to create the tables. Fine for local demo use.
-
-`scripts/smoke_test.py` exercises the whole API against a throwaway SQLite DB:
+Demo mode needs no database at all. To use a real MongoDB (local install or a
+MongoDB Atlas free cluster), set `MONGODB_URI` and `MONGODB_DB` in `backend/.env`
+(see `.env.example`). Indexes are created automatically on startup, or run:
 
 ```bash
 cd backend
-python ..\scripts\smoke_test.py                # SQLite (default)
-python ..\scripts\smoke_test.py --mysql        # against configured MySQL
+python -c "from app import create_app; create_app()"   # connects + builds indexes
+```
+
+`scripts/smoke_test.py` exercises the whole API against an in-memory database:
+
+```bash
+cd backend
+python ..\scripts\smoke_test.py
 ```
 
 ---
@@ -156,65 +147,59 @@ with any static server/nginx and proxy `/api/` to the backend above.
 
 ---
 
-## Deploying to Render (with Railway MySQL)
+## Deploying to Vercel (with MongoDB Atlas) — all free tiers
 
-The repo includes a `render.yaml` Blueprint, so deployment is mostly wiring up
-secrets. The app is **single-origin**: one Render service serves both the built
-React app and `/api` (needed because the frontend calls relative `/api` paths).
+The repo ships with `vercel.json` and `api/` plumbing, so deployment is mostly
+wiring up secrets. The app is **single-origin**: Vercel serves the built React
+app as static files and routes `/api/*` to the Python function, keeping cookie
+sessions and relative `/api` calls working on one domain.
 
-### 1. Railway — managed MySQL
-1. Create a Railway project → **+ New** → **MySQL** (pay-as-you-go).
-2. Copy its connection string. It usually looks like
-   `mysql://USER:PASS@HOST:PORT/DATABASE` — convert it to SQLAlchemy format:
+### 1. MongoDB Atlas — free M0 cluster
+1. Create a free MongoDB Atlas account → **Build a Database** → pick the **M0**
+   free cluster (no card required) → create it.
+2. **Database Access** → Add new user (read/write), note username + password.
+3. **Network Access** → Add IP `0.0.0.0/0` (allow all) so Vercel functions can reach it.
+4. Copy the connection string:
+   `mongodb+srv://USER:PASS@cluster0.xxxx.mongodb.net/` — this is `MONGODB_URI`.
+   Keep `MONGODB_DB` as any name (default `reposweep`).
 
-   ```
-   mysql+pymysql://USER:PASS@HOST:PORT/DATABASE?charset=utf8mb4
-   ```
-
-3. (If Railway requires SSL on your instance, add `&ssl=true`-style query params
-   — test connectivity first; see the health check below.)
-
-### 2. Render — web service
-1. Create a Render account → **New → Blueprint** → connect the
-   `benrehhhh/RepoSweep` repo → Render picks up `render.yaml`.
-2. After the service is created, set the `sync: false` env vars (Dashboard →
-   Environment), substituting **your final subdomain**:
-
-   | Env var               | Value |
-   | --------------------- | ----- |
-   | `DATABASE_URL`        | the `mysql+pymysql://…` string from step 1 |
-   | `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | from your GitHub OAuth app |
-   | `FRONTEND_URL`        | `https://<your-subdomain>.onrender.com` |
-   | `BACKEND_URL`         | `https://<your-subdomain>.onrender.com` |
-   | `GITHUB_REDIRECT_URI` | `https://<your-subdomain>.onrender.com/api/auth/github/callback` |
-
-   (`SECRET_KEY` is auto-generated by the Blueprint; `FLASK_ENV=production`,
-   `MOCK_MODE=false`, and `FRONTEND_DIST` come from `render.yaml`.)
-
-3. Render's build installs Python + Node deps and runs `vite build`; the service
-   starts Waitress on `$PORT`. Health check: `/api/health`.
+### 2. Vercel — app
+1. Create a Vercel account → **Add New → Project** → import the
+   `benrehhhh/RepoSweep` repo.
+2. Framework preset: **Other** (build/output are driven by `vercel.json`).
+3. Deploy → get your URL `https://<project>.vercel.app`.
 
 ### 3. GitHub OAuth app
-Update your OAuth app's **Authorization callback URL** to
-`https://<your-subdomain>.onrender.com/api/auth/github/callback` and homepage to
-`https://<your-subdomain>.onrender.com`. Keep a separate localhost OAuth app for
-local development.
+Create an OAuth App at https://github.com/settings/developers
+(GitHub allows only **one** callback URL per app):
+- Homepage URL: `https://<project>.vercel.app`
+- Authorization callback URL: `https://<project>.vercel.app/api/auth/github/callback`
 
-### 4. Create tables once
-From your machine, with `DATABASE_URL` pointed at Railway:
+Keep the localhost OAuth app for development.
 
-```bash
-cd backend
-set DATABASE_URL=mysql+pymysql://…   # Railway URL
-python -c "from app import create_app; from app.extensions import db; app=create_app(); ctx=app.app_context(); ctx.push(); db.create_all(); print('tables created')"
-```
+### 4. Environment variables (Vercel → Project → Settings → Environment Variables)
+
+| Env var | Value |
+| ------- | ----- |
+| `MONGODB_URI`          | the `mongodb+srv://…` string from step 1 |
+| `MONGODB_DB`           | `reposweep` (or your chosen database name) |
+| `SECRET_KEY`           | a long random hex string |
+| `GITHUB_CLIENT_ID` / `GITHUB_CLIENT_SECRET` | from your new OAuth app |
+| `FRONTEND_URL`         | `https://<project>.vercel.app` |
+| `BACKEND_URL`          | `https://<project>.vercel.app` |
+| `GITHUB_REDIRECT_URI`  | `https://<project>.vercel.app/api/auth/github/callback` |
+| `FLASK_ENV`            | `production` |
+| `MOCK_MODE`            | `false` |
+
+Then **Redeploy** so the new build picks the variables up.
 
 ### 5. Verify
-- `curl https://<subdomain>/api/health` → `{"demo_mode": false, "status": "ok"}`
+- `curl https://<project>.vercel.app/api/health` → `{"demo_mode": false, "status": "ok"}`
 - Open the URL → HTTPS, GitHub sign-in, your own repos listed.
 
-> **Note:** Render's free plan spins the service down after idle periods (the
-> first request after idle takes ~30s). Railway MySQL is billed separately.
+> **Notes:** the Python function may take a few seconds on its first hit after a
+> cold start (free tier). GitHub API calls inside `/api` are parallelized to stay
+> inside Vercel's short execution window.
 
 ## Configuration reference
 
@@ -223,7 +208,8 @@ Configuration is read from environment variables; the backend auto-loads
 
 | Variable               | Default                                    | Purpose |
 | ---------------------- | ------------------------------------------ | ------- |
-| `DATABASE_URL`         | `mysql+pymysql://reposweep:reposweep@localhost:3306/reposweep?charset=utf8mb4` | SQLAlchemy connection string |
+| `MONGODB_URI`          | `memory://` (in-memory mongomock)          | MongoDB connection string |
+| `MONGODB_DB`           | `reposweep`                                | Database name |
 | `SECRET_KEY`           | dev fallback (change in prod)              | Session signing |
 | `FRONTEND_URL`         | `http://localhost:5173`                    | CORS / OAuth origin |
 | `BACKEND_URL`          | `http://localhost:5000`                    | OAuth redirect base |
@@ -240,13 +226,16 @@ Configuration is read from environment variables; the backend auto-loads
 
 ```
 RepoSweep/
+├── api/
+│   ├── index.py               # Vercel serverless entry (WSGI bridge)
+│   └── requirements.txt       # `-r ../backend/requirements.txt`
 ├── backend/
 │   ├── run.py                 # dev server entry (port 5000)
 │   ├── wsgi.py                # production WSGI entry (Waitress etc.)
 │   ├── config.py              # env-driven configuration
 │   ├── app/
 │   │   ├── __init__.py        # Flask factory, error handlers, init-db CLI
-│   │   ├── extensions.py      # db, rate limiter
+│   │   ├── extensions.py      # mongo store (PyMongo / mongomock), rate limiter
 │   │   ├── auth.py            # session, CSRF, demo login, OAuth helpers
 │   │   ├── github.py          # GitHubClient (OAuth + API)
 │   │   ├── mock_github.py     # 47 demo repositories
@@ -263,10 +252,9 @@ RepoSweep/
 │       ├── layouts/           # AppLayout, Sidebar, Topbar
 │       └── pages/             # Landing, AuthCallback, Dashboard, Repositories,
 │                              # ProtectedRepositories, Activity, Settings
-├── database/schema.sql        # MySQL DDL
 ├── scripts/
-│   ├── setup_db.ps1           # one-shot MySQL + .env bootstrap
-│   └── smoke_test.py          # API smoke test (SQLite or --mysql)
+│   └── smoke_test.py          # API smoke test (in-memory MongoDB)
+├── vercel.json                # static SPA + /api rewrite config
 └── .env.example
 ```
 
@@ -302,15 +290,17 @@ RepoSweep/
 
 ## Troubleshooting
 
-- **`Access denied for user 'reposweep'` during setup** — older versions of the
-  script fed the *root* password to the schema step. Update the script and re-run;
-  it is idempotent.
 - **Port 5000 "already in use" / plain 404 page** — something else is on 5000.
   `netstat -ano | findstr :5000` to find the PID, then
   `taskkill /PID <pid> /F` (restart the backend after).
 - **`npm.ps1 is not recognized`** in PowerShell — run `npm.cmd run dev` instead.
 - **Vite can't reach the API** — the dev proxy forwards `/api` → `localhost:5000`;
   make sure the backend is running.
+- **`MongoWriteError`/auth failures in production** — check `MONGODB_URI`
+  (Atlas connection strings need `mongodb+srv://`), that the database user can
+  read/write, and **Network Access allows `0.0.0.0/0`**.
+- **Demo login disabled** — you set GitHub OAuth credentials but want the mock
+  experience: set `MOCK_MODE=true`.
 
 ## License
 

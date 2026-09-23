@@ -46,20 +46,44 @@ class GitHubClient:
         return self._request("GET", "/user")
 
     def get_repos(self, per_page=100, max_pages=10):
+        """List the authenticated user's repositories.
+
+        Page 1 is fetched first (fast path for typical accounts), then the
+        remaining pages in parallel — keeps large accounts fast on hosts
+        (Vercel serverless) with a short maximum execution window.
+        """
+        from concurrent.futures import ThreadPoolExecutor
+
+        first = self._request(
+            "GET",
+            "/user/repos",
+            params={"per_page": per_page, "page": 1, "sort": "pushed", "type": "all"},
+        ) or []
+        if len(first) < per_page or max_pages <= 1:
+            return first
+
+        total_pages = min(max_pages, 1 + (len(first) // per_page) or 1)
+        fetched = {1: first}
+        remaining = list(range(2, total_pages + 1))
+        with ThreadPoolExecutor(max_workers=5) as pool:
+            futures = {
+                pool.submit(
+                    self._request,
+                    "GET",
+                    "/user/repos",
+                    params={"per_page": per_page, "page": page, "sort": "pushed", "type": "all"},
+                ): page
+                for page in remaining
+            }
+            for fut in futures:
+                fetched[futures[fut]] = fut.result() or []
+
         repos = []
-        page = 1
-        while page <= max_pages:
-            batch = self._request(
-                "GET",
-                "/user/repos",
-                params={"per_page": per_page, "page": page, "sort": "pushed", "type": "all"},
-            )
-            if not batch:
-                break
+        for page in range(1, total_pages + 1):
+            batch = fetched[page]
             repos.extend(batch)
             if len(batch) < per_page:
                 break
-            page += 1
         return repos
 
     def get_repo(self, owner, name):

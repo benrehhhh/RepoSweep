@@ -1,8 +1,9 @@
 """End-to-end smoke test for the RepoSweep backend.
 
-Runs against a temporary SQLite database so it works before MySQL is set up.
-Verifies: demo login, session + CSRF, repo listing, protection, archive/delete
-validation (wrong phrase -> 400, protected -> skipped), activity logs.
+Runs against an in-memory mongomock database (`MONGODB_URI=memory://`) so it
+works before MongoDB is set up. Verifies: demo login, session + CSRF, repo
+listing, protection, archive/delete validation (wrong phrase -> 400, protected
+-> skipped), activity logs.
 
 Usage:
     python scripts/smoke_test.py
@@ -10,19 +11,13 @@ Usage:
 
 import os
 import sys
-import tempfile
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "backend"))
 
-# Pass --mysql to run against the configured MySQL database (reads backend/.env
-# when run from the backend/ directory). Default: throwaway SQLite file.
-USE_MYSQL = "--mysql" in sys.argv
-if not USE_MYSQL:
-    os.environ["DATABASE_URL"] = f"sqlite:///{os.path.join(tempfile.gettempdir(), 'reposweep_smoke.db')}"
+os.environ["MONGODB_URI"] = "memory://"
 os.environ["MOCK_MODE"] = "true"
 
 from app import create_app  # noqa: E402
-from app.extensions import db  # noqa: E402
 
 failures = []
 
@@ -36,13 +31,6 @@ def check(name, condition, detail=""):
 
 def main():
     app = create_app()
-    with app.app_context():
-        if USE_MYSQL:
-            db.create_all()
-        else:
-            db.drop_all()
-            db.create_all()
-
     client = app.test_client()
 
     print("health")

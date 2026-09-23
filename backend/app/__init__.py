@@ -4,7 +4,7 @@ from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 
 from config import get_config
-from app.extensions import db, limiter
+from app.extensions import limiter, mongo
 from app.utils.errors import GitHubAPIError, RepoSweepError
 
 
@@ -17,7 +17,7 @@ def create_app():
         resources={r"/api/*": {"origins": app.config["CORS_ORIGINS"], "supports_credentials": True}},
     )
 
-    db.init_app(app)
+    mongo.init_app(app)
     limiter.init_app(app)
 
     from app.routes import ALL_BLUEPRINTS
@@ -35,9 +35,11 @@ def create_app():
 
     @app.cli.command("init-db")
     def init_db():
-        """Create all tables in the configured database."""
-        db.create_all()
-        print("Database tables created.")
+        """Create the MongoDB indexes (idempotent)."""
+        from app.models import ensure_indexes
+
+        ensure_indexes()
+        print("MongoDB indexes created.")
 
     return app
 
@@ -82,6 +84,10 @@ def register_spa_routes(app):
     Uses the same origin as the API so the SPA (which calls relative /api paths)
     and the session cookies work over a single domain. Registering after the
     /api blueprints keeps API routes winning over the SPA catch-all.
+
+    On Vercel this is unused: the static SPA and /api function are both served
+    by Vercel itself (see vercel.json). It stays for local production builds
+    where Flask serves dist/ directly.
     """
     dist = os.path.abspath(app.config.get("FRONTEND_DIST", "../frontend/dist"))
     index_path = os.path.join(dist, "index.html")
@@ -103,13 +109,3 @@ def register_spa_routes(app):
         if os.path.isfile(file_path):
             return send_from_directory(dist, path)
         return send_from_directory(dist, "index.html")
-
-
-def ensure_tables(app):
-    """Create tables if they don't exist yet (convenience for local dev)."""
-    with app.app_context():
-        try:
-            db.create_all()
-        except Exception:
-            # Database may not exist yet; CLI/setup instructions cover creation.
-            pass

@@ -1,9 +1,11 @@
 Flask==3.1.0
 Flask-Cors==5.0.0
-Flask-SQLAlchemy==3.1.1
 flask-limiter==3.8.0
-PyMySQL==1.1.1
-cryptography==44.0.0
+pymongo==4.10.1
+dnspython==2.7.0
+mongomock==4.1.2
+# mongomock imports pkg_resources, removed from setuptools >=81
+setuptools<81
 requests==2.33.0
 python-dotenv==1.0.1
 waitress==3.0.2

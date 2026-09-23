@@ -10,10 +10,5 @@ bp = Blueprint("activity", __name__, url_prefix="/api")
 @auth.login_required
 def list_activity():
     user = auth.require_user()
-    logs = (
-        ActivityLog.query.filter_by(user_id=user.id)
-        .order_by(ActivityLog.created_at.desc())
-        .limit(200)
-        .all()
-    )
+    logs = ActivityLog.find_by_user(user.id)
     return jsonify({"items": [log.to_dict(include_items=True) for log in logs]})

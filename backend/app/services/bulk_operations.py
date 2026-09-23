@@ -2,19 +2,24 @@
 
 Every destructive operation is validated here, independent of what the
 frontend sends. The frontend is never trusted with permission decisions.
+
+GitHub calls run with capped concurrency so a 50-repo sweep finishes quickly
+— important on serverless hosts with short execution windows (Vercel free).
 """
 
 import re
+from concurrent.futures import ThreadPoolExecutor
 
 from flask import current_app
 
-from app.extensions import db
 from app.models.activity import ActivityLog, OperationItem
 from app.models.user import ProtectedRepository
 from app.services import github_service
 
 REPO_NAME_RE = re.compile(r"^[A-Za-z0-9_.\-]{1,255}$")
 OWNER_RE = re.compile(r"^[A-Za-z0-9\-]{1,255}$")
+
+BULK_CONCURRENCY = 5
 
 
 def validate_payload(repositories):
@@ -49,6 +54,45 @@ def _known_repo_set(user, access_token):
     return known
 
 
+def _apply_one(user_login, action, known, protected_keys, access_token, owner, name):
+    key = f"{owner}/{name}".lower()
+
+    if key in protected_keys:
+        return {
+            "owner": owner,
+            "repository_name": name,
+            "status": "skipped",
+            "error_message": "Protected repository — remove protection before deleting.",
+        }
+
+    if key not in known or owner.lower() != user_login:
+        return {
+            "owner": owner,
+            "repository_name": name,
+            "status": "failed",
+            "error_message": "Repository not found or you don't have permission to modify it.",
+        }
+
+    try:
+        if action == "delete":
+            github_service.delete_repo(owner, name, access_token)
+        elif action == "archive":
+            github_service.archive_repo(owner, name, access_token)
+        else:
+            raise ValueError(f"Unknown action: {action}")
+        return {"owner": owner, "repository_name": name, "status": "success"}
+    except Exception as exc:
+        friendly = getattr(exc, "friendly", None) or str(exc) or (
+            "GitHub couldn't complete this action."
+        )
+        return {
+            "owner": owner,
+            "repository_name": name,
+            "status": "failed",
+            "error_message": friendly,
+        }
+
+
 def run_bulk(user, action, repositories, config):
     """Execute a bulk archive or delete. `config` carries extra validation flags."""
     access_token = config["access_token"]
@@ -61,62 +105,25 @@ def run_bulk(user, action, repositories, config):
     known = _known_repo_set(user, access_token)
     user_login = user.username.lower()
 
-    results = []
-    succeeded = 0
-    failed = 0
-    skipped = 0
-
-    for owner, name in targets:
-        key = f"{owner}/{name}".lower()
-
-        if key in protected_keys:
-            skipped += 1
-            results.append(
-                {
-                    "owner": owner,
-                    "repository_name": name,
-                    "status": "skipped",
-                    "error_message": "Protected repository — remove protection before deleting.",
-                }
+    with ThreadPoolExecutor(max_workers=BULK_CONCURRENCY) as pool:
+        futures = [
+            pool.submit(
+                _apply_one,
+                user_login,
+                action,
+                known,
+                protected_keys,
+                access_token,
+                owner,
+                name,
             )
-            continue
+            for owner, name in targets
+        ]
+        results = [fut.result() for fut in futures]
 
-        if key not in known or owner.lower() != user_login:
-            failed += 1
-            results.append(
-                {
-                    "owner": owner,
-                    "repository_name": name,
-                    "status": "failed",
-                    "error_message": "Repository not found or you don't have permission to modify it.",
-                }
-            )
-            continue
-
-        try:
-            if action == "delete":
-                github_service.delete_repo(owner, name, access_token)
-                if owner.lower() == user_login:
-                    known.discard(key)
-            elif action == "archive":
-                github_service.archive_repo(owner, name, access_token)
-            else:
-                raise ValueError(f"Unknown action: {action}")
-            succeeded += 1
-            results.append({"owner": owner, "repository_name": name, "status": "success"})
-        except Exception as exc:
-            failed += 1
-            friendly = getattr(exc, "friendly", None) or str(exc) or (
-                "GitHub couldn't complete this action."
-            )
-            results.append(
-                {
-                    "owner": owner,
-                    "repository_name": name,
-                    "status": "failed",
-                    "error_message": friendly,
-                }
-            )
+    succeeded = sum(1 for r in results if r["status"] == "success")
+    failed = sum(1 for r in results if r["status"] == "failed")
+    skipped = sum(1 for r in results if r["status"] == "skipped")
 
     if failed:
         status = "success" if succeeded and not failed else ("partial" if succeeded else "failed")
@@ -125,25 +132,13 @@ def run_bulk(user, action, repositories, config):
     else:
         status = "success"
 
-    log = ActivityLog(
-        user_id=user.id,
-        action=action,
-        repository_count=len(targets),
-        status=status,
+    log = ActivityLog.create(
+        user.id,
+        action,
+        len(targets),
+        status,
     )
-    db.session.add(log)
-    db.session.flush()
-    for item in results:
-        db.session.add(
-            OperationItem(
-                activity_log_id=log.id,
-                owner=item["owner"],
-                repository_name=item["repository_name"],
-                status=item["status"],
-                error_message=item.get("error_message"),
-            )
-        )
-    db.session.commit()
+    OperationItem.create_many(log.id, results)
 
     return {
         "action": action,

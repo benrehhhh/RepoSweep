@@ -3,7 +3,6 @@ import re
 from flask import Blueprint, jsonify, request
 
 from app import auth
-from app.extensions import db
 from app.models.user import ProtectedRepository
 from app.services import github_service
 from app.utils.errors import NotFoundError, RepoSweepError
@@ -53,24 +52,17 @@ def add_protected():
     if full_name in keys:
         return jsonify({"error": "Repository is already protected."}), 409
 
-    row = ProtectedRepository(
-        user_id=user.id,
-        owner=owner,
-        repository_name=name,
-    )
-    db.session.add(row)
-    db.session.commit()
+    row = ProtectedRepository.create(user.id, owner, name)
     return jsonify({"item": row.to_dict()}), 201
 
 
-@bp.delete("/<int:item_id>")
+@bp.delete("/<string:item_id>")
 @auth.login_required
 @auth.csrf_required
 def remove_protected(item_id):
     user = auth.require_user()
-    row = db.session.get(ProtectedRepository, item_id)
+    row = ProtectedRepository.find_by_id(item_id)
     if row is None or row.user_id != user.id:
         raise NotFoundError("Protected repository not found.")
-    db.session.delete(row)
-    db.session.commit()
+    ProtectedRepository.delete_by_id(item_id)
     return jsonify({"ok": True})

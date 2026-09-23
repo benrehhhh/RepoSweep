@@ -17,11 +17,11 @@ class Config:
 
     SECRET_KEY = os.getenv("SECRET_KEY", "dev-insecure-secret-change-me")
 
-    SQLALCHEMY_DATABASE_URI = os.getenv(
-        "DATABASE_URL",
-        "mysql+pymysql://reposweep:reposweep@localhost:3306/reposweep?charset=utf8mb4",
-    )
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    # MongoDB. `memory://` uses an in-memory mongomock client — the zero-setup
+    # default for local dev and the smoke tests. Production sets a real URI
+    # (e.g. MongoDB Atlas: mongodb+srv://user:pass@cluster.mongodb.net/).
+    MONGODB_URI = os.getenv("MONGODB_URI", "memory://")
+    MONGODB_DB = os.getenv("MONGODB_DB", "reposweep")
 
     FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173").rstrip("/")
     BACKEND_URL = os.getenv("BACKEND_URL", "http://localhost:5000").rstrip("/")
@@ -51,7 +51,8 @@ class Config:
         return [self.FRONTEND_URL]
 
     BULK_MAX_ITEMS = 50
-    # Directory of the built frontend (relative to the backend working dir).
+    # Directory of the built frontend (relative to the backend working dir);
+    # only used when the backend serves the SPA itself (local production build).
     FRONTEND_DIST = os.getenv("FRONTEND_DIST", "../frontend/dist")
     DEMO_USERNAME = "demo-user"
     DEMO_DISPLAY_NAME = "Demo User"
