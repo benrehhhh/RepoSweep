@@ -280,3 +280,7 @@ hr {
 .icon-warning {
   color: var(--rs-warning);
 }
+
+.place-items-center {
+  place-items: center !important;
+}
