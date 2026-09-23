@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, jsonify
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 
 from config import get_config
@@ -26,6 +26,7 @@ def create_app():
         app.register_blueprint(bp)
 
     register_error_handlers(app)
+    register_spa_routes(app)
 
     @app.get("/api/health")
     @limiter.exempt
@@ -73,6 +74,35 @@ def register_error_handlers(app):
     def internal_error(_error):
         # Never expose a raw server traceback.
         return jsonify({"error": "Something went wrong on our end. Please try again."}), 500
+
+
+def register_spa_routes(app):
+    """Serve the built frontend from this app when it exists.
+
+    Uses the same origin as the API so the SPA (which calls relative /api paths)
+    and the session cookies work over a single domain. Registering after the
+    /api blueprints keeps API routes winning over the SPA catch-all.
+    """
+    dist = os.path.abspath(app.config.get("FRONTEND_DIST", "../frontend/dist"))
+    index_path = os.path.join(dist, "index.html")
+    if not os.path.isfile(index_path):
+        # Not built yet (local dev uses `vite dev`) — keep the API-only server.
+        return
+
+    app.config["FRONTEND_DIST"] = dist
+
+    @app.get("/")
+    def spa_index():
+        return send_from_directory(dist, "index.html")
+
+    @app.get("/<path:path>")
+    def spa_routes(path):
+        if path.startswith("api/") or path.startswith("static/"):
+            return jsonify({"error": "The requested resource was not found."}), 404
+        file_path = os.path.join(dist, path)
+        if os.path.isfile(file_path):
+            return send_from_directory(dist, path)
+        return send_from_directory(dist, "index.html")
 
 
 def ensure_tables(app):

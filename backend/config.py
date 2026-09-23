@@ -51,6 +51,8 @@ class Config:
         return [self.FRONTEND_URL]
 
     BULK_MAX_ITEMS = 50
+    # Directory of the built frontend (relative to the backend working dir).
+    FRONTEND_DIST = os.getenv("FRONTEND_DIST", "../frontend/dist")
     DEMO_USERNAME = "demo-user"
     DEMO_DISPLAY_NAME = "Demo User"
     DEMO_AVATAR_URL = (
