@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 
 import { useAuth } from '../hooks/useAuth.jsx';
 import EmptyState from '../components/common/EmptyState.jsx';
+import SweepMark from '../components/common/SweepMark.jsx';
 
 const FEATURES = [
   { icon: 'bi-collection', title: 'Bulk Repository Management', text: 'Work across every repository in your GitHub account from one focused workspace.' },
@@ -77,7 +78,7 @@ export default function LandingPage() {
               className="d-grid place-items-center rounded"
               style={{ width: 28, height: 28, background: 'var(--rs-accent)', color: '#fff' }}
             >
-              <i className="bi bi-broadcast-pin" aria-hidden="true" />
+              <SweepMark size={16} />
             </span>
             <span className="fw-bold">RepoSweep</span>
           </Link>
@@ -118,7 +119,7 @@ export default function LandingPage() {
           <div className="row align-items-center g-5">
             <div className="col-lg-6">
               <span className="eyebrow">
-                <i className="bi bi-broadcast-pin" aria-hidden="true" />
+                <SweepMark size={15} className="align-middle" />
                 Bulk GitHub repository cleanup
               </span>
               <h1 className="display-5 fw-bold mt-3 mb-3" style={{ letterSpacing: '-0.03em' }}>
@@ -273,7 +274,7 @@ export default function LandingPage() {
           <div className="row g-4">
             <div className="col-md-5">
               <div className="d-flex align-items-center gap-2 mb-2">
-                <i className="bi bi-broadcast-pin" aria-hidden="true" />
+                <SweepMark size={16} />
                 <span className="fw-bold text-white">RepoSweep</span>
               </div>
               <p className="mb-1" style={{ color: 'var(--rs-sidebar-muted)', fontSize: 13 }}>
