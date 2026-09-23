@@ -17,6 +17,15 @@ def list_repositories():
     repos = github_service.get_repos(access_token) or []
     protected_keys = ProtectedRepository.keys_for_user(user.id)
 
+    # Only list repositories owned by the signed-in user. Organization-owned
+    # repos are excluded here and rejected server-side during bulk operations.
+    own = user.username.lower()
+    repos = [
+        repo
+        for repo in repos
+        if (repo.get("owner", {}).get("login") or "").lower() == own
+    ]
+
     annotated = []
     for repo in repos:
         full_name = (repo.get("full_name") or f"{repo['owner']['login']}/{repo['name']}").lower()
