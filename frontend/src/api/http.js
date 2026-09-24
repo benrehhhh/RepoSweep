@@ -1,4 +1,5 @@
 let csrfToken = null;
+let sessionExpiredHandler = null;
 
 export function setCsrfToken(token) {
   csrfToken = token || null;
@@ -12,6 +13,10 @@ export function getCsrfToken() {
   return csrfToken;
 }
 
+export function onSessionExpired(fn) {
+  sessionExpiredHandler = fn;
+}
+
 export class ApiError extends Error {
   constructor(message, status, data) {
     super(message);
@@ -21,7 +26,7 @@ export class ApiError extends Error {
   }
 }
 
-async function handleResponse(response) {
+async function handleResponse(response, path) {
   let data = null;
   const contentType = response.headers.get('content-type') || '';
   if (contentType.includes('application/json')) {
@@ -33,6 +38,16 @@ async function handleResponse(response) {
   }
 
   if (!response.ok) {
+    if (
+      response.status === 401 &&
+      !path.startsWith('/auth/') &&
+      sessionExpiredHandler
+    ) {
+      // Session expired server-side (idle/absolute timeout): re-check auth
+      // so the app signs the user out and redirects, instead of showing a
+      // stale page. Auth endpoints are skipped to avoid a logout() loop.
+      sessionExpiredHandler();
+    }
     const message =
       (data && data.error) ||
       (response.status === 401
@@ -66,7 +81,7 @@ export async function request(method, path, body) {
 
   try {
     const response = await fetch(`/api${path}`, options);
-    return await handleResponse(response);
+    return await handleResponse(response, path);
   } catch (error) {
     if (error instanceof ApiError) throw error;
     throw new ApiError(

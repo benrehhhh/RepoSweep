@@ -8,7 +8,7 @@ import {
 } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-import { setCsrfToken, clearCsrfToken } from '../api/http.js';
+import { setCsrfToken, clearCsrfToken, onSessionExpired } from '../api/http.js';
 import * as authService from '../services/auth.js';
 
 const AuthContext = createContext(null);
@@ -38,6 +38,14 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     loadStatus();
   }, [loadStatus]);
+
+  useEffect(() => {
+    // Any authenticated API returning 401 means the server-side session
+    // expired (idle timeout or absolute cap). Re-check auth: AppLayout will
+    // flip to unauthenticated and redirect to the sign-in screen.
+    onSessionExpired(refresh);
+    return () => onSessionExpired(null);
+  }, [refresh]);
 
   const signInDemo = useCallback(async () => {
     try {
