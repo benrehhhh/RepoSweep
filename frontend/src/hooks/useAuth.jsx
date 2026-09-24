@@ -39,14 +39,6 @@ export function AuthProvider({ children }) {
     loadStatus();
   }, [loadStatus]);
 
-  useEffect(() => {
-    // Any authenticated API returning 401 means the server-side session
-    // expired (idle timeout or absolute cap). Re-check auth: AppLayout will
-    // flip to unauthenticated and redirect to the sign-in screen.
-    onSessionExpired(refresh);
-    return () => onSessionExpired(null);
-  }, [refresh]);
-
   const signInDemo = useCallback(async () => {
     try {
       const data = await authService.demoLogin();
@@ -79,6 +71,14 @@ export function AuthProvider({ children }) {
   const refresh = useCallback(async () => {
     await loadStatus();
   }, [loadStatus]);
+
+  useEffect(() => {
+    // Any authenticated API returning 401 means the server-side session
+    // expired (idle timeout or absolute cap). Re-check auth: AppLayout will
+    // flip to unauthenticated and redirect to the sign-in screen.
+    onSessionExpired(refresh);
+    return () => onSessionExpired(null);
+  }, [refresh]);
 
   const value = useMemo(
     () => ({ ...status, error, signInDemo, signOut, refresh }),
