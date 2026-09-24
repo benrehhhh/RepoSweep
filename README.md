@@ -228,7 +228,7 @@ Configuration is read from environment variables; the backend auto-loads
 RepoSweep/
 ├── api/
 │   ├── index.py               # Vercel serverless entry (WSGI bridge)
-│   └── requirements.txt       # `-r ../backend/requirements.txt`
+│   └── requirements.txt       # Vercel runtime deps (flat list; backend/ has the full dev set)
 ├── backend/
 │   ├── run.py                 # dev server entry (port 5000)
 │   ├── wsgi.py                # production WSGI entry (Waitress etc.)
