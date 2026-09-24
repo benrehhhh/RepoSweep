@@ -14,11 +14,19 @@ class MongoStore:
 
     def __init__(self):
         self._client = None
+        self._uri = None
+        self._database = None
         self.db = None
 
     def init_app(self, app):
         uri = app.config.get("MONGODB_URI", "memory://")
         database = app.config.get("MONGODB_DB", "reposweep")
+        if self._client is not None and self._uri == uri and self._database == database:
+            # Already bound to this URI/database — keep the existing client so
+            # multiple `create_app()` calls (e.g. tests) share one database.
+            return
+        self._uri = uri
+        self._database = database
         if uri == "memory://":
             import mongomock
 

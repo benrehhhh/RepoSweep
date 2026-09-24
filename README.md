@@ -36,7 +36,7 @@ every operation is recorded in an activity log.
 | Frontend  | React 19, Vite 6, React Router 7, TanStack Query, Bootstrap 5 (CSS only) + custom CSS, Bootstrap Icons |
 | Backend   | Python 3.13, Flask 3, PyMongo 4, Flask-Limiter, Waitress (local prod) |
 | Database  | MongoDB (Atlas M0 free in production) — `memory://` mongomock for zero-setup demo |
-| Security  | HttpOnly SameSite session cookie, per-session CSRF token header, server-side bulk-op validation |
+| Security  | HttpOnly SameSite session cookie, per-session CSRF token header, idle + absolute session timeouts, server-side bulk-op validation |
 | Hosting   | Vercel (static SPA + Python `/api` function, free tier) |
 
 ---
@@ -190,6 +190,8 @@ Keep the localhost OAuth app for development.
 | `GITHUB_REDIRECT_URI`  | `https://<project>.vercel.app/api/auth/github/callback` |
 | `FLASK_ENV`            | `production` |
 | `MOCK_MODE`            | `false` |
+| `SESSION_TIMEOUT_MINUTES` | `30` (optional) | Idle minutes before the session expires (slides on activity) |
+| `SESSION_MAX_LIFETIME_MINUTES` | `720` (optional) | Absolute max minutes from sign-in, regardless of activity |
 
 Then **Redeploy** so the new build picks the variables up.
 
@@ -216,6 +218,8 @@ Configuration is read from environment variables; the backend auto-loads
 | `GITHUB_CLIENT_ID/SECRET` | empty                                   | Enables live mode |
 | `MOCK_MODE`            | `false` (auto-true without OAuth creds)    | Force demo mode |
 | `SESSION_COOKIE_SECURE`| `false` (`true` when `FLASK_ENV=production`) | Set cookie only over HTTPS |
+| `SESSION_TIMEOUT_MINUTES` | `30` | Idle timeout (slides on every request) |
+| `SESSION_MAX_LIFETIME_MINUTES` | `720` | Absolute timeout from sign-in (ignores activity) |
 | `RATELIMIT_STORAGE_URI`| (memory)                                   | Shared backend for rate limits (e.g. `redis://…`) |
 | `FLASK_ENV`            | `development`                              | `production` enables `ProductionConfig` |
 | `BULK_MAX_ITEMS`       | `50`                                       | Max repos per bulk op |
@@ -282,6 +286,10 @@ RepoSweep/
   `confirm_phrase` is not the exact string `DELETE`.
 - **CSRF** — every state-changing request needs `X-CSRF-Token` from
   `/api/auth/status`; cookies are HttpOnly + SameSite=Lax.
+- **Session timeouts** — sessions expire after `SESSION_TIMEOUT_MINUTES`
+  (default 30) with no activity and no later than `SESSION_MAX_LIFETIME_MINUTES`
+  (default 720) after sign-in. Enforced server-side: Flask rejects the expired
+  signed cookie, and the absolute cap is checked on every request.
 - **Rate limits** — auth and bulk endpoints are throttled.
 - **No token leakage** — the GitHub access token lives only in the DB/session.
 - **Errors** — no tracebacks leak past the API boundary.

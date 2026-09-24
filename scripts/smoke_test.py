@@ -11,6 +11,8 @@ Usage:
 
 import os
 import sys
+import time
+from datetime import timedelta
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "backend"))
 
@@ -50,6 +52,7 @@ def main():
     body = r.get_json()
     check("authenticated after login", body["authenticated"] is True)
     check("csrf token issued", bool(body.get("csrf_token")))
+    check("status exposes session_timeout_minutes", body.get("session_timeout_minutes") == 30)
     csrf = body["csrf_token"]
 
     print("repositories")
@@ -141,6 +144,25 @@ def main():
         headers=headers,
     )
     check("missing csrf rejected", r.status_code == 403)
+
+    print("session timeouts")
+    timeout_client = create_app().test_client()
+    timeout_client.application.config["PERMANENT_SESSION_LIFETIME"] = timedelta(seconds=1)
+    timeout_client.post("/api/auth/demo")
+    r = timeout_client.get("/api/auth/status")
+    check("idle session valid after login", r.get_json()["authenticated"] is True)
+    time.sleep(2.5)
+    r = timeout_client.get("/api/auth/status")
+    check("idle timeout expires session", r.get_json()["authenticated"] is False)
+
+    cap_client = create_app().test_client()
+    cap_client.application.config["SESSION_MAX_LIFETIME"] = timedelta(seconds=1)
+    cap_client.post("/api/auth/demo")
+    r = cap_client.get("/api/auth/status")
+    check("absolute session valid after login", r.get_json()["authenticated"] is True)
+    time.sleep(1.5)
+    r = cap_client.get("/api/auth/status")
+    check("absolute cap expires session", r.get_json()["authenticated"] is False)
 
     print("user")
     r = client.get("/api/user", headers=headers)

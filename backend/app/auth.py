@@ -1,6 +1,7 @@
 """Session authentication and CSRF protection helpers."""
 
 import secrets
+import time
 from functools import wraps
 
 from flask import current_app, g, session
@@ -11,8 +12,10 @@ from app.utils.errors import AuthError
 
 def _new_session(user):
     session.clear()
+    session.permanent = True
     session["user_id"] = user.id
     session["demo"] = user.github_id is None
+    session["login_ts"] = int(time.time())
     session["csrf_token"] = secrets.token_hex(24)
 
 
@@ -49,6 +52,14 @@ def login_github(github_profile, access_token, token_scope):
 def current_user():
     user_id = session.get("user_id")
     if not user_id:
+        return None
+    login_ts = session.get("login_ts")
+    if login_ts is None:
+        # Session created before session timeouts existed: backfill the login
+        # timestamp instead of force-logging the user out mid-flight.
+        session["login_ts"] = int(time.time())
+    elif time.time() - login_ts > current_app.config["SESSION_MAX_LIFETIME"].total_seconds():
+        session.clear()
         return None
     return User.find_by_id(user_id)
 

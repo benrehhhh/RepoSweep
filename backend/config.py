@@ -1,4 +1,5 @@
 import os
+from datetime import timedelta
 
 from dotenv import load_dotenv
 
@@ -40,6 +41,15 @@ class Config:
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"
     SESSION_COOKIE_SECURE = _env_bool("SESSION_COOKIE_SECURE", default=False)
+
+    # Session timeout. The idle window slides forward on every request; the
+    # absolute cap is measured from sign-in and ignores activity. Flask rejects
+    # the signed cookie server-side once PERMANENT_SESSION_LIFETIME passes.
+    SESSION_TIMEOUT_MINUTES = int(os.getenv("SESSION_TIMEOUT_MINUTES", "30"))
+    PERMANENT_SESSION_LIFETIME = timedelta(minutes=SESSION_TIMEOUT_MINUTES)
+    SESSION_MAX_LIFETIME_MINUTES = int(os.getenv("SESSION_MAX_LIFETIME_MINUTES", "720"))
+    SESSION_MAX_LIFETIME = timedelta(minutes=SESSION_MAX_LIFETIME_MINUTES)
+    SESSION_REFRESH_EACH_REQUEST = True
 
     @property
     def MOCK_MODE(self):

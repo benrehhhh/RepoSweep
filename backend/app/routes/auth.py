@@ -59,6 +59,7 @@ def status():
             "demo_mode": current_app.config["MOCK_MODE"],
             "user": user.to_dict() if user else None,
             "csrf_token": auth.session_csrf_token() if user else None,
+            "session_timeout_minutes": current_app.config["SESSION_TIMEOUT_MINUTES"],
         }
     )
 
